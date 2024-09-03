@@ -1,0 +1,181 @@
+
+
+Entry number: 1
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 17:30:00 -0400 - 2023-08-03 17:35:00 -0400
+	Value: 1min
+
+Entry number: 2
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 17:35:00 -0400 - 2023-08-03 17:40:00 -0400
+	Value: 1min
+
+Entry number: 3
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 17:40:00 -0400 - 2023-08-03 17:45:00 -0400
+	Value: 1min
+
+Entry number: 4
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 17:45:00 -0400 - 2023-08-03 17:50:00 -0400
+	Value: 1min
+
+Entry number: 5
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 17:50:00 -0400 - 2023-08-03 17:55:00 -0400
+	Value: 1min
+
+Entry number: 6
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 17:55:00 -0400 - 2023-08-03 18:00:00 -0400
+	Value: 1min
+
+Entry number: 7
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:00:00 -0400 - 2023-08-03 18:05:00 -0400
+	Value: 1min
+
+Entry number: 8
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:05:00 -0400 - 2023-08-03 18:10:00 -0400
+	Value: 1min
+
+Entry number: 9
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:10:00 -0400 - 2023-08-03 18:15:00 -0400
+	Value: 1min
+
+Entry number: 10
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:15:00 -0400 - 2023-08-03 18:20:00 -0400
+	Value: 1min
+
+Entry number: 11
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:20:00 -0400 - 2023-08-03 18:25:00 -0400
+	Value: 1min
+
+Entry number: 12
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:25:00 -0400 - 2023-08-03 18:30:00 -0400
+	Value: 1min
+
+Entry number: 13
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:30:00 -0400 - 2023-08-03 18:35:00 -0400
+	Value: 1min
+
+Entry number: 14
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:35:00 -0400 - 2023-08-03 18:40:00 -0400
+	Value: 1min
+
+Entry number: 15
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:40:00 -0400 - 2023-08-03 18:45:00 -0400
+	Value: 1min
+
+Entry number: 16
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:45:00 -0400 - 2023-08-03 18:50:00 -0400
+	Value: 1min
+
+Entry number: 17
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:50:00 -0400 - 2023-08-03 18:55:00 -0400
+	Value: 1min
+
+Entry number: 18
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-03 18:55:00 -0400 - 2023-08-03 19:00:00 -0400
+	Value: 1min
+
+Entry number: 19
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-08 18:50:00 -0400 - 2023-08-08 18:55:00 -0400
+	Value: 1min
+
+Entry number: 20
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-08 18:55:00 -0400 - 2023-08-08 19:00:00 -0400
+	Value: 1min
+
+Entry number: 21
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-08 19:00:00 -0400 - 2023-08-08 19:05:00 -0400
+	Value: 1min
+
+Entry number: 22
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-08 19:05:00 -0400 - 2023-08-08 19:10:00 -0400
+	Value: 1min
+
+Entry number: 23
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-08 19:10:00 -0400 - 2023-08-08 19:15:00 -0400
+	Value: 1min
+
+Entry number: 24
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-08 19:15:00 -0400 - 2023-08-08 19:20:00 -0400
+	Value: 1min
+
+Entry number: 25
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-31 21:55:00 -0400 - 2023-08-31 22:00:00 -0400
+	Value: 1min
+
+Entry number: 26
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-31 22:00:00 -0400 - 2023-08-31 22:05:00 -0400
+	Value: 1min
+
+Entry number: 27
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-31 22:05:00 -0400 - 2023-08-31 22:10:00 -0400
+	Value: 1min
+
+Entry number: 28
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-31 22:10:00 -0400 - 2023-08-31 22:15:00 -0400
+	Value: 1min
+
+Entry number: 29
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-31 22:15:00 -0400 - 2023-08-31 22:20:00 -0400
+	Value: 1min
+
+Entry number: 30
+	Source: Noah’s Iphone
+	Type: HKQuantityTypeIdentifierAppleStandTime
+	2023-08-31 22:20:00 -0400 - 2023-08-31 22:25:00 -0400
+	Value: 1min

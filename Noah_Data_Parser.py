@@ -5,29 +5,42 @@ def read_xml(file_path):
         # Parse the XML file
         tree = ET.parse(file_path)
         root = tree.getroot()
+        
+        print("Start translating data")
+        print(f"Root tag: {root.tag}\n")
+        print(f"Root attributes: {root.attrib}\n")
+        data_files = {}
+        step_counters = {}
 
-        with open("test_data.txt", "w") as file:
-            print("Start translating data")
-            file.write(f"Root tag: {root.tag}\n")
-            file.write(f"Root attributes: {root.attrib}\n")
+        for child in root:
+            # Filter for Noah's health data
+            if child.tag == "Record" and ((child.get('sourceName') == "Noah’s Iphone") or (child.get('sourceName') == "Noah’s Apple Watch")):
+                record_type = child.get("type")
 
-            step = 0
+                # Open a new file for each type of data if not already opened
+                if record_type not in data_files:
+                    data_files[record_type] = open(f"{record_type}_data.txt", "w")
+                    step_counters[record_type] = 0
 
-            for child in root:
-                if child.tag == "Record" and ((child.get('sourceName') == "Noah’s Iphone") or (child.get('sourceName') == "Noah’s Apple Watch")):
-                    step += 1
-                    file.write(f"\n\nEntry number: {step}")
-                    #file.write(f"\nTag: {child.tag}, Attributes: {child.attrib}\n")
-                    file.write(f"\n\tSource: {child.get('sourceName')}")
-                    file.write(f"\n\tType: {child.get('type')}")
-                    file.write(f"\n\t{child.get('startDate')} - {child.get('endDate')}")
-                    file.write(f"\n\tValue: {child.get('value')}{child.get('unit')}")
-                
-                    for sub_child in child:
-                        file.write(f"\n\t\tSub-tag: {sub_child.tag}, Sub-attributes: {sub_child.attrib}")
+                file = data_files[record_type]
+                step_counters[record_type] += 1
 
-            print("Finished translating data")
-            
+                # Write the data into the file
+                file.write(f"\n\nEntry number: {step_counters[record_type]}")
+                file.write(f"\n\tSource: {child.get('sourceName')}")
+                file.write(f"\n\tType: {child.get('type')}")
+                file.write(f"\n\t{child.get('startDate')} - {child.get('endDate')}")
+                file.write(f"\n\tValue: {child.get('value')}{child.get('unit')}")
+
+                for sub_child in child:
+                    file.write(f"\n\t\tSub-tag: {sub_child.tag}, Sub-attributes: {sub_child.attrib}")
+
+        print("Finished translating data")
+
+        # Close all the files after processing
+        for file in data_files.values():
+            file.close()
+
     except ET.ParseError as e:
         print(f"Failed to parse XML: {e}")
     except FileNotFoundError:
