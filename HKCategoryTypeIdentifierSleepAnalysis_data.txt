@@ -39241,3 +39241,6 @@ Entry number: 5606
 	2024-08-27 07:49:05 -0400 - 2024-08-27 08:00:00 -0400
 	Value: HKCategoryValueSleepAnalysisInBedNone
 		Sub-tag: MetadataEntry, Sub-attributes: {'key': 'HKTimeZone', 'value': 'America/New_York'}
+
+
+#comment: there are multipe entries associate with one day. Please keep this in mind when processing the data
