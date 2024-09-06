@@ -34,5 +34,5 @@ def read_xml(file_path):
 
 if __name__ == "__main__":
     # Replace 'your_file.xml' with your XML file path
-    file_path = '/Users/noahh/export.xml'
+    file_path = '/Users/noahh/Downloads/apple_health_export 2/export.xml'
     read_xml(file_path)
