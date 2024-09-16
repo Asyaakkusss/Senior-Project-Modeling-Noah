@@ -1,7 +1,0 @@
-
-
-Entry number: 1
-	Source: Noah’s Iphone
-	Type: HKQuantityTypeIdentifierBodyMass
-	2023-07-01 18:59:11 -0400 - 2023-07-01 18:59:11 -0400
-	Value: 145lb

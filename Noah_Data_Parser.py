@@ -1,3 +1,4 @@
+#This file primarily serves as a way to view the data
 import xml.etree.ElementTree as ET
 
 def read_xml(file_path):
@@ -57,5 +58,5 @@ def read_xml(file_path):
         print("File not found. Please check the file path.")
 
 if __name__ == "__main__":
-    file_path = '/Users/noahh/Downloads/apple_health_export 2/export.xml'
+    file_path = '/Users/noahh/Downloads/apple_health_export 3/export.xml'
     read_xml(file_path)
