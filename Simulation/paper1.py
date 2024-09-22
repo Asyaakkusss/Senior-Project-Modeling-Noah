@@ -1,51 +1,5 @@
 import numpy as np
-
-# Define constants
-a1 = 1
-a0 = 0 #time update model intercept
-a2 = 1
-gamma_squared = 0.022**2
-
-# extended kalman filter coefficients 
-b1 = 384.4286 # linear coefficient 
-b2 = -4.5714 # quadratic coefficient 
-b0 = -7382.3 # intercept 
-sigma_squared = 18.882
-c2 = 1  # Set a default value for c2 if not provided
-
-# Initialize previous CT and variance
-CTt_initial = 37  # Initial Core temperature estimate, based on the average of 37C
-vt_initial = 0.25  # Initial variance, based on average standard deviation in most individuals of ~0.5C
-
-# Initial heart rate 
-heart_rate = 60  # Example observation, set this value as needed
-
-# Step 1: Compute the preliminary estimate of CT
-CTt_hat = a1 * CT_prev + a0
-
-# Step 2: Compute the preliminary estimate of the variance
-vt_hat = a2 * vt_minus_1 + gamma_squared
-
-# Step 3: Compute the extended KF mapping function variance coefficient
-ct = 2 * b2 * CTt_hat + b1
-
-# Step 4: Compute the Kalman gain
-kt = vt_hat * ct / (c2 * ct * vt_hat + sigma_squared)
-
-# Step 5: Compute the final estimate of CT
-expected_HR = b2 * CTt_hat**2 + b1 * CTt_hat + b0
-CTt = CTt_hat + kt * (HRt - expected_HR)
-
-# Step 6: Compute the variance of the final CT estimate
-vt = (1 - kt * ct) * vt_hat
-
-# Print results
-print(f"Preliminary CT estimate (ˆCTt): {CTt_hat}")
-print(f"Preliminary variance estimate (ˆvt): {vt_hat}")
-print(f"Extended KF mapping function variance coefficient (ct): {ct}")
-print(f"Kalman gain (kt): {kt}")
-print(f"Final CT estimate (CTt): {CTt}")
-print(f"Final variance of CT estimate (vt): {vt}")
+import matplotlib.pyplot as plt 
 
 '''
 var1: we first need to create an array that stores the values of CT over time.
@@ -88,6 +42,89 @@ vt_new = vt_prev + 0.000484
 c_t = 2*b2*CT_new + b1 = 2 * -4.5714 * CT1 + 384.4286
 c_t = -9.1428 * CT_new  + 384.4286 
 
-5. Kalman gain computation....what is Kalman gain? 
+5. Kalman gain computation....what is Kalman gain? Indicates how much weight should be given to 
+new measurements vs the predicted state estimate. Balances uncertain in prediction with uncertainty in measurements. 
+High Kalman gain: filter trust measurement more than prediction 
+Low Kalman gain: filter trust prediction more than measurement 
+In oour case, the measurement is Noah's data (gotten from his apple watch sensor) and the prediction is whatever the 
+filter decides the value actually should be at that point in time. Like so: 
+
+k_t = (v_t * c_t) / (c_t**2 * v_t) + 18.88**2
+
+6. computer final estimate of CT using everything that we have so far: 
+
+CT_final = CT_new + k_t(heart_rate - (b2 * CT_new**2 + b1 * CT_new + b0))
+
+CT_final = CT_new + k_t(heart_rate - (-4.5714 * CT_new**2 + 384.4286 * CT_new - 7887.1))
+
+7. compute final varine of final CT estimate (vt): 
+
+v_t = (1 - k_t*c_t)v_t
+
+**please note that the sigma is the SD for binned heart_rate (it is 18.88 plus/minus 3.78 bpm). 
 
 '''
+
+
+
+
+def simulate_heart_rate(): 
+
+    num_samples = 1000  # Number of data points to generate
+    mean_hr = 70        # Average heart rate
+    std_dev = 5         # Standard deviation of heart rate
+
+    # Generate random heart rate data
+    heart_rate = np.random.normal(mean_hr, std_dev, num_samples)
+
+    return heart_rate
+    # Plotting the data
+    #plt.plot(heart_rate)
+    #plt.title('Simulated Heart Rate Data (BPM)')
+    #plt.xlabel('Time')
+    #plt.ylabel('Heart Rate (BPM)')
+    #plt.show()
+
+#array for preliminary estimates of CT
+CT_hat = [] 
+
+#array for final estimates of CT
+CT_finalboss = [] 
+
+#array for time (in minutes)
+time = [] 
+
+#array for variance of preliminary estimate 
+v_t = [] 
+
+#array for extended KF mapping function variance coefficient 
+c_t = [] 
+
+#array for the variance of the final boss estimate
+v_t_finalboss = [] 
+
+#array for kalman gain over time 
+k_t = []
+
+#array for heart rate 
+heart_rate = simulate_heart_rate() 
+
+'''instantiate the first iteration of this shit:''' 
+
+CT_hat.append(37) # first value of CT_hat (there is no previous)
+
+v_t.append(0.000484) # first value for variance (since there is no previous)
+
+# equation for calculating c_t for the first iteration 
+c_t_firstit = (-9.1428 * CT_hat[0]) + 384.4286
+c_t.append(c_t_firstit) #appending the result of the firstit calculation to c_t 
+
+#computing kalman gain for the first iteration 
+k_t_firstit = (v_t[0] * c_t[0])/((c_t[0]**2 * v_t[0]) + 18.88**2)
+k_t.append(k_t_firstit)
+
+#compute final boss bc I am based and red pilled 
+CT_finalboss_firsit = CT_hat[0] + k_t[0]*(heart_rate[0] - (-4.5714 * CT_hat[0]**2 + 384.4286 * CT_hat[0] - 7887.1))
+
+#compute vt of the ifnal boss 
+v_t_finalboss.append((1- k_t[0]*c_t[0])*v_t[0]) 
