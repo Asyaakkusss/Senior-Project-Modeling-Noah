@@ -70,7 +70,7 @@ v_t = (1 - k_t*c_t)v_t
 
 def simulate_heart_rate(): 
 
-    num_samples = 1000  # Number of data points to generate
+    num_samples = 1440  # Number of data points to generate
     mean_hr = 70        # Average heart rate
     std_dev = 5         # Standard deviation of heart rate
 
@@ -84,6 +84,28 @@ def simulate_heart_rate():
     #plt.xlabel('Time')
     #plt.ylabel('Heart Rate (BPM)')
     #plt.show()
+
+def simulate_heart_rate_detailed(): 
+
+    # Parameters
+    num_samples = 1440 * 5        # Number of data points to generate
+    mean_hr = 70              # Average heart rate
+    std_dev = 3               # Standard deviation of heart rate
+    time = np.linspace(0, 10, num_samples)  # Simulated time in hours
+
+    # Base heart rate with random noise
+    base_hr = np.random.normal(mean_hr, std_dev, num_samples)
+
+    # Add a periodic component to simulate circadian rhythm
+    circadian_rhythm = 5 * np.sin(2 * np.pi * time / 24)
+
+    # Add an exercise effect: A peak in heart rate at 3-4 hours
+    exercise_effect = np.exp(-(time - 3)**2 / (2 * 0.5**2)) * 20
+
+    # Total heart rate
+    heart_rate = base_hr + circadian_rhythm + exercise_effect
+
+    return heart_rate
 
 #array for preliminary estimates of CT
 CT_hat = [] 
@@ -107,7 +129,7 @@ v_t_finalboss = []
 k_t = []
 
 #array for heart rate 
-heart_rate = simulate_heart_rate() 
+heart_rate = simulate_heart_rate_detailed() 
 
 '''instantiate the first iteration of this shit:''' 
 
@@ -125,6 +147,33 @@ k_t.append(k_t_firstit)
 
 #compute final boss bc I am based and red pilled 
 CT_finalboss_firsit = CT_hat[0] + k_t[0]*(heart_rate[0] - (-4.5714 * CT_hat[0]**2 + 384.4286 * CT_hat[0] - 7887.1))
+CT_finalboss.append(CT_finalboss_firsit)
 
 #compute vt of the ifnal boss 
 v_t_finalboss.append((1- k_t[0]*c_t[0])*v_t[0]) 
+
+'''keep going'''
+
+for i in range(1, 1440*5): 
+    CT_hat.append(CT_finalboss[i-1])
+
+    v_t.append(v_t[i-1] + 0.000484) 
+
+    c_t_it = (-9.1428 * CT_hat[i]) + 384.4286
+    c_t.append(c_t_it) 
+
+    #computing kalman gain for the first iteration 
+    k_t_it = (v_t[i] * c_t[i])/((c_t[i]**2 * v_t[i]) + 18.88**2)
+    k_t.append(k_t_it)
+
+    CT_finalboss_it = CT_hat[i] + k_t[i]*(heart_rate[i] - (-4.5714 * CT_hat[i]**2 + 384.4286 * CT_hat[i] - 7887.1))
+    CT_finalboss.append(CT_finalboss_it)
+
+    v_t_finalboss.append(1 - k_t[i]*c_t[i]*v_t[i])
+
+
+
+iterations = np.arange(0, 1440 * 5)
+
+plt.plot(iterations, CT_finalboss)
+plt.show()
