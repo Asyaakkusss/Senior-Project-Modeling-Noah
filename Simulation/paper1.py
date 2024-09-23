@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt 
 
+'''TODO: figure out wtf is going on with the simulated data and why it is just as noisy as the core temp data. Kalman filter is not
+Kalmaning'''
 '''
 var1: we first need to create an array that stores the values of CT over time.
 CT stands for core body temperature.
@@ -84,9 +86,9 @@ def simulate_heart_rate_detailed():
     # Parameters
     num_samples = 1440        # Number of data points to generate
     mean_hr = 70              # Average heart rate
-    std_dev = 3               # Standard deviation of heart rate
-    time = np.linspace(0, 10, num_samples)  # Simulated time in hours
-
+    std_dev = 5               # Standard deviation of heart rate
+    time = np.arange(0, 1440, 1)  # Simulated time in hours
+    print(time)
     # Base heart rate with random noise
     base_hr = np.random.normal(mean_hr, std_dev, num_samples)
 
@@ -123,7 +125,7 @@ v_t_finalboss = []
 k_t = []
 
 #array for heart rate 
-heart_rate = simulate_heart_rate_detailed() 
+heart_rate = simulate_heart_rate() 
 
 '''instantiate the first iteration of this shit:''' 
 
@@ -163,14 +165,14 @@ for i in range(1, 1440):
     CT_finalboss_it = CT_hat[i] + k_t[i]*(heart_rate[i] - (-4.5714 * CT_hat[i]**2 + 384.4286 * CT_hat[i] - 7887.1))
     CT_finalboss.append(CT_finalboss_it)
 
-    v_t_finalboss.append((1 - k_t[i]*c_t[i])*v_t[i])
+    v_t_finalboss.append(1 - k_t[i]*c_t[i]*v_t[i])
 
 
 
 iterations = np.arange(0, 1440)
 
 plt.subplot(2, 2, 1)
-plt.plot(heart_rate)
+plt.plot(iterations, heart_rate)
 plt.title('Simulated Heart Rate Data (BPM)')
 plt.xlabel('Time (Minutes)')
 plt.ylabel('Heart Rate (BPM)')
