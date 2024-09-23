@@ -78,17 +78,11 @@ def simulate_heart_rate():
     heart_rate = np.random.normal(mean_hr, std_dev, num_samples)
 
     return heart_rate
-    # Plotting the data
-    #plt.plot(heart_rate)
-    #plt.title('Simulated Heart Rate Data (BPM)')
-    #plt.xlabel('Time')
-    #plt.ylabel('Heart Rate (BPM)')
-    #plt.show()
 
 def simulate_heart_rate_detailed(): 
 
     # Parameters
-    num_samples = 1440 * 5        # Number of data points to generate
+    num_samples = 1440        # Number of data points to generate
     mean_hr = 70              # Average heart rate
     std_dev = 3               # Standard deviation of heart rate
     time = np.linspace(0, 10, num_samples)  # Simulated time in hours
@@ -154,7 +148,7 @@ v_t_finalboss.append((1- k_t[0]*c_t[0])*v_t[0])
 
 '''keep going'''
 
-for i in range(1, 1440*5): 
+for i in range(1, 1440): 
     CT_hat.append(CT_finalboss[i-1])
 
     v_t.append(v_t[i-1] + 0.000484) 
@@ -169,11 +163,22 @@ for i in range(1, 1440*5):
     CT_finalboss_it = CT_hat[i] + k_t[i]*(heart_rate[i] - (-4.5714 * CT_hat[i]**2 + 384.4286 * CT_hat[i] - 7887.1))
     CT_finalboss.append(CT_finalboss_it)
 
-    v_t_finalboss.append(1 - k_t[i]*c_t[i]*v_t[i])
+    v_t_finalboss.append((1 - k_t[i]*c_t[i])*v_t[i])
 
 
 
-iterations = np.arange(0, 1440 * 5)
+iterations = np.arange(0, 1440)
 
+plt.subplot(2, 2, 1)
+plt.plot(heart_rate)
+plt.title('Simulated Heart Rate Data (BPM)')
+plt.xlabel('Time (Minutes)')
+plt.ylabel('Heart Rate (BPM)')
+
+plt.subplot(2, 2, 2)
+plt.title('Core Temperature Data from Kalman Filtering')
+plt.xlabel("Time (Minutes)")
+plt.ylabel("Core Temperature (C)")
 plt.plot(iterations, CT_finalboss)
+
 plt.show()
