@@ -72,22 +72,23 @@ v_t = (1 - k_t*c_t)v_t
 
 def simulate_heart_rate(): 
 
-    num_samples = 1440  # Number of data points to generate
+    num_samples = 200  # Number of data points to generate
     mean_hr = 70        # Average heart rate
     std_dev = 5         # Standard deviation of heart rate
 
     # Generate random heart rate data
     heart_rate = np.random.normal(mean_hr, std_dev, num_samples)
 
+    print(heart_rate)
     return heart_rate
 
 def simulate_heart_rate_detailed(): 
 
     # Parameters
-    num_samples = 1440        # Number of data points to generate
+    num_samples = 200        # Number of data points to generate
     mean_hr = 70              # Average heart rate
     std_dev = 5               # Standard deviation of heart rate
-    time = np.arange(0, 1440, 1)  # Simulated time in hours
+    time = np.arange(0, 200, 1)  # Simulated time in hours
     print(time)
     # Base heart rate with random noise
     base_hr = np.random.normal(mean_hr, std_dev, num_samples)
@@ -125,11 +126,11 @@ v_t_finalboss = []
 k_t = []
 
 #array for heart rate 
-heart_rate = simulate_heart_rate() 
+heart_rate = simulate_heart_rate_detailed() 
 
 '''instantiate the first iteration of this shit:''' 
 
-CT_hat.append(37) # first value of CT_hat (there is no previous)
+CT_hat.append(36.8) # first value of CT_hat (there is no previous)
 
 v_t.append(0.000484) # first value for variance (since there is no previous)
 
@@ -146,11 +147,11 @@ CT_finalboss_firsit = CT_hat[0] + k_t[0]*(heart_rate[0] - (-4.5714 * CT_hat[0]**
 CT_finalboss.append(CT_finalboss_firsit)
 
 #compute vt of the ifnal boss 
-v_t_finalboss.append((1- k_t[0]*c_t[0])*v_t[0]) 
+v_t_finalboss.append(1- k_t[0]*c_t[0]*v_t[0]) 
 
 '''keep going'''
 
-for i in range(1, 1440): 
+for i in range(1, 200): 
     CT_hat.append(CT_finalboss[i-1])
 
     v_t.append(v_t[i-1] + 0.000484) 
@@ -169,7 +170,7 @@ for i in range(1, 1440):
 
 
 
-iterations = np.arange(0, 1440)
+iterations = np.arange(0, 200)
 
 plt.subplot(2, 2, 1)
 plt.plot(iterations, heart_rate)
