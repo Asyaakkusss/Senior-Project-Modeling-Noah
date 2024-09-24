@@ -46,6 +46,7 @@ def read_xml(file_path) -> dict:
         health_dataframes = {}
         for key, data_list in health_data.items():
             health_dataframes[key] = pd.DataFrame(data_list)
+            if 
 
         print("Finished translating data")
         #print(data_files.keys())
