@@ -67,42 +67,22 @@ v_t = (1 - k_t*c_t)v_t
 
 '''
 
-
-
-
-def simulate_heart_rate(): 
-
-    num_samples = 200  # Number of data points to generate
-    mean_hr = 70        # Average heart rate
-    std_dev = 5         # Standard deviation of heart rate
-
-    # Generate random heart rate data
-    heart_rate = np.random.normal(mean_hr, std_dev, num_samples)
-
-    print(heart_rate)
-    return heart_rate
+import csv 
+import numpy as np 
 
 def simulate_heart_rate_detailed(): 
 
-    # Parameters
-    num_samples = 200        # Number of data points to generate
-    mean_hr = 70              # Average heart rate
-    std_dev = 5               # Standard deviation of heart rate
-    time = np.arange(0, 200, 1)  # Simulated time in hours
-    print(time)
-    # Base heart rate with random noise
-    base_hr = np.random.normal(mean_hr, std_dev, num_samples)
+    with open('/home/asyaakkus/Senior-Project-Modeling-Noah/HeartRate.csv', 'r') as file:
+        col_to_extract = "value"
+        reader = csv.DictReader(file)
+    
+        heart_rate = [row[col_to_extract] for row in reader]
+    
+    for i in range(len(heart_rate)): 
+        heart_rate[i] = float(heart_rate[i]) 
 
-    # Add a periodic component to simulate circadian rhythm
-    circadian_rhythm = 5 * np.sin(2 * np.pi * time / 24)
 
-    # Add an exercise effect: A peak in heart rate at 3-4 hours
-    exercise_effect = np.exp(-(time - 3)**2 / (2 * 0.5**2)) * 20
-
-    # Total heart rate
-    heart_rate = base_hr + circadian_rhythm + exercise_effect
-
-    return heart_rate
+    return heart_rate[:1440]
 
 #array for preliminary estimates of CT
 CT_hat = [] 
@@ -151,7 +131,7 @@ v_t_finalboss.append(1- k_t[0]*c_t[0]*v_t[0])
 
 '''keep going'''
 
-for i in range(1, 200): 
+for i in range(1, 1440): 
     CT_hat.append(CT_finalboss[i-1])
 
     v_t.append(v_t[i-1] + 0.000484) 
@@ -170,7 +150,7 @@ for i in range(1, 200):
 
 
 
-iterations = np.arange(0, 200)
+iterations = np.arange(0, 1440)
 
 plt.subplot(2, 2, 1)
 plt.plot(iterations, heart_rate)

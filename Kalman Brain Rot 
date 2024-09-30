@@ -1,0 +1,63 @@
+Initialization
+
+1. Initialize the state of the filter
+2. Initialize our belief in the state
+
+Predict
+
+1. Use process model to predict state at the next time step
+2. Adjust belief to account for the uncertainty in prediction
+
+Update
+
+1. Get a measurement and associated belief about its accuracy
+2. Compute residual between estimated state and measurement
+3. Compute scaling factor based on whether the measurement
+or prediction is more accurate
+4. set state between the prediction and measurement based
+on scaling factor
+5. update belief in the state based on how certain we are
+in the measurement
+
+[] we want to use a multivariate Kalman filter to bring in respiratory rate, heart rate, and blood oxygen concentration and calculate core body temperature by combining them
+
+[] Multivariate model, prediction step:
+    [] x_hat = Fx + Bu, where x is the state mean
+    [] P_hat = FPF_transpose + Q, where P is the covariance
+
+[] Multivariate model, update step:
+    [] y = z - Hx
+    [] K = P_hatH_transpose (HP_hatH_transpose + R)^-1
+    [] x = x_hat + Ky
+    [] P = (I - KH)P_hat
+
+    **use gaussian for estimate of the state and error
+    **use gaussian for measurement and error
+    **use gaussian for process model
+    **use process model to predict next state
+    **form an estimate midway between measurement and prior
+[] Our job: design state (x, P), process (F, Q), measurement (z, R) and measurement function H
+    [] observed variables: respiratory rate, heart rate, blood oxygen concentration. directly measured by a sensor.
+    [] hidden variable: core body temperature. inferred from observed variables.
+
+designing state variable:
+
+[] x, or the state mean, has four variables:
+    [] CT = core temperature
+    [] RR = respiratory rate
+    [] VO = oxygen concentration
+    [] HR = heart rate
+    [] x = [CT]
+           [RR]
+           [VO]
+           [HR]
+
+designing state covariance:
+
+[] P, or the state covariance, which is a diagonal matrix with variances for each data set on their
+
+
+
+
+
+
