@@ -46,7 +46,6 @@ def read_xml(file_path) -> dict:
         health_dataframes = {}
         for key, data_list in health_data.items():
             health_dataframes[key] = pd.DataFrame(data_list)
-            if 
 
         print("Finished translating data")
         #print(data_files.keys())
@@ -67,7 +66,7 @@ def pd_to_csv(data_dict):
         data_dict[key].to_csv(f"{key}.csv")
 
 if __name__ == "__main__":
-    file_path = '/Users/noahh/Downloads/apple_health_export 3/export.xml'
+    file_path = '/Users/noahh/Downloads/apple_health_export 4/export.xml'
     health_data = read_xml(file_path)
     pd_to_csv(health_data)
     print("Finished translating data")
