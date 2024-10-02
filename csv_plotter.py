@@ -27,4 +27,4 @@ def plot(file, interval=1440, stop=None, begin=0):
         row += interval
 
 #Change the data as necessary
-plot('PureHeartRate.csv', stop=10000)
+plot('VO2Max.csv', stop=10000)
