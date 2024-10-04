@@ -86,24 +86,99 @@ measurements from the watch are taken in count/min.
 The timestamps don't align and this is a big problem. We have to probably use the interpolate method in pandas to make this 
 work at all. 
 
+RR first timestamp: [[Timestamp('2023-07-07 01:08:27-0400', tz='UTC-04:00') 17.0]
+RR last timestamp:  [Timestamp('2024-09-05 08:27:27-0400', tz='UTC-04:00') 11.0]]
+
 
 '''
 
-#data processing 
+#data processing for respiratory rate 
 df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/RespiratoryRate.csv")
 
+#convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
+
+#the datetime values will be used 
 df.set_index('start', inplace=True)
 
-common_time = pd.date_range(start=df.index.min(), end=df.index.max(), freq='1T')
+#normalize them to a constant frequency 
+common_time = pd.date_range(start=df.index.min(), end=df.index.max(), freq='min')
 
+#align values with the times 
 respir_interpolated = df['value'].reindex(common_time).interpolate()
 
+#create a dataframe with start and value columns 
 aligned_rr_df = pd.DataFrame({
-    'start': common_time, 
     'value': respir_interpolated
 })
 
-print(aligned_rr_df)
+processed_respiratory = aligned_rr_df.to_numpy()
+
+
+#data processing for heart rate 
+df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/HeartRate.csv")
+
+#convert to datetime 
+df['start'] = pd.to_datetime(df['start'])
+
+#the datetime values will be used 
+df.set_index('start', inplace=True)
+
+if df.index.duplicated().any():
+    df = df[~df.index.duplicated(keep='first')]
+
+start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+#normalize them to a constant frequency 
+common_time = pd.date_range(start=start_time, 
+                            end=end_time, 
+                            freq='min')
+
+#align values with the times 
+heartrate_interpolated = df['value'].reindex(common_time).interpolate()
+
+#create a dataframe with start and value columns 
+aligned_hr_df = pd.DataFrame({
+    'value': heartrate_interpolated
+})
+
+processed_heart_rate = aligned_hr_df.to_numpy()
+
+#data processing for basal metabolic rate 
+df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv")
+
+#convert to datetime 
+df['start'] = pd.to_datetime(df['start'])
+
+#the datetime values will be used 
+df.set_index('start', inplace=True)
+
+if df.index.duplicated().any():
+    df = df[~df.index.duplicated(keep='first')]
+
+start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+#normalize them to a constant frequency 
+common_time = pd.date_range(start=start_time, 
+                            end=end_time, 
+                            freq='min')
+
+#align values with the times 
+basal_interpolated = df['value'].reindex(common_time).interpolate()
+
+#create a dataframe with start and value columns 
+aligned_basal_df = pd.DataFrame({
+    'value': basal_interpolated
+})
+
+processed_basal_rate = aligned_basal_df.to_numpy()
+
+
+plt.plot(processed_basal_rate)
+plt.show()
+plt.plot(processed_heart_rate)
+plt.show()
+plt.plot(processed_respiratory)
+plt.show()
 #unified_array = np.array([[RR], [BE], [HR]])
 #P = np.cov(unified_array)
