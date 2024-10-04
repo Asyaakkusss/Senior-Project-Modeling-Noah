@@ -112,7 +112,8 @@ aligned_rr_df = pd.DataFrame({
     'value': respir_interpolated
 })
 
-processed_respiratory = aligned_rr_df.to_numpy()
+print(aligned_rr_df)
+processed_respiratory = aligned_rr_df.to_numpy().flatten()
 
 
 #data processing for heart rate 
@@ -142,7 +143,8 @@ aligned_hr_df = pd.DataFrame({
     'value': heartrate_interpolated
 })
 
-processed_heart_rate = aligned_hr_df.to_numpy()
+print(aligned_hr_df)
+processed_heart_rate = aligned_hr_df.to_numpy().flatten()
 
 #data processing for basal metabolic rate 
 df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv")
@@ -170,15 +172,11 @@ basal_interpolated = df['value'].reindex(common_time).interpolate()
 aligned_basal_df = pd.DataFrame({
     'value': basal_interpolated
 })
+print(aligned_basal_df)
 
-processed_basal_rate = aligned_basal_df.to_numpy()
+processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 
-
-plt.plot(processed_basal_rate)
-plt.show()
-plt.plot(processed_heart_rate)
-plt.show()
-plt.plot(processed_respiratory)
-plt.show()
-#unified_array = np.array([[RR], [BE], [HR]])
-#P = np.cov(unified_array)
+#creation of P matrix values 
+unified_array = np.array([processed_basal_rate, processed_heart_rate, processed_respiratory])
+P_threebythree = np.cov(unified_array)
+print(P_threebythree)
