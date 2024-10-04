@@ -29,7 +29,7 @@ R = [R_HR 0]
 '''
 import numpy as np 
 import csv 
-
+import matplotlib.pyplot as plt 
 col_to_extract = "value"
 
 #extract respiratory rate data
@@ -65,9 +65,7 @@ vo2_rate = np.array(column_data)
 
 #convert the arrays to integers 
 def convert_to_integer(array): 
-    for i in range(len(array)): 
-        heart_rate[i] = float(array[i]) 
-    return array 
+    return np.array(array).astype(float)
 
 RR = convert_to_integer(respiratory_rate)
 VO = convert_to_integer(vo2_rate)
@@ -75,7 +73,11 @@ HR = convert_to_integer(heart_rate)
 
 print(np.shape(RR), np.shape(VO), np.shape(HR))
 
-unified_array = np.array([[RR], [VO], [HR]])
-P = np.cov(unified_array)
+print(VO)
+plt.plot(RR)
+plt.show()
 
-print(P)
+# unified_array = np.array([[RR], [VO], [HR]])
+# P = np.cov(unified_array)
+
+# print(P)

@@ -9,7 +9,7 @@ Predict
 2. Adjust belief to account for the uncertainty in prediction
 
 Update
-
+linear interpolation for vo2 data 
 1. Get a measurement and associated belief about its accuracy
 2. Compute residual between estimated state and measurement
 3. Compute scaling factor based on whether the measurement
@@ -54,7 +54,9 @@ designing state variable:
 
 designing state covariance:
 
-[] P, or the state covariance, which is a diagonal matrix with variances for each data set on their
+[] P, or the state covariance, which is a diagonal matrix with variances for each data set on its diagonal and zeros on either side like so:
+
+
 
 
 
