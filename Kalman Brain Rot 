@@ -39,7 +39,7 @@ in the measurement
 [] Our job: design state (x, P), process (F, Q), measurement (z, R) and measurement function H
     [] observed variables: respiratory rate, heart rate, blood oxygen concentration. directly measured by a sensor.
     [] hidden variable: core body temperature. inferred from observed variables.
-
+ 
 designing state variable:
 
 [] x, or the state mean, has four variables:
@@ -54,9 +54,18 @@ designing state variable:
 
 designing state covariance:
 
-[] P, or the state covariance, which is a diagonal matrix with variances for each data set on its diagonal and zeros on either side like so:
+[] P, or the state covariance, which is a diagonal matrix with variances for each data set on its diagonal and
+zeros on either side. This has been implemented in the my_kalman_filter.py by interpolating the data and using the 
+np cov method to find the covariance matrix associated with CT, RR, VO, HR. CT was assumed to have a covariance of 0
+with all the other values and an educated guess for the variance was given to be 7. 
 
+designing the process model: 
 
+For now, let's let F be:  [1 0 dt 0.5dt^2]
+                          [0 1 0 dt]
+                          [0 0 1  0]
+                          [0 0 0  1]
+dt is change in time, which will be per second in our case. 
 
 
 

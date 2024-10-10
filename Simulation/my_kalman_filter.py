@@ -195,3 +195,5 @@ X = np.array([
     [np.mean(processed_heart_rate[650:])],
     [np.mean(processed_respiratory[650:])],
 ])
+
+#design process model:
