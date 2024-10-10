@@ -32,7 +32,7 @@ import csv
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
-
+from filterpy.kalman import predict 
 #extract respiratory rate data
 
 #extract heart rate data 
@@ -197,3 +197,22 @@ X = np.array([
 ])
 
 #design process model:
+dt = 1 #the time changes consistently every second in our data 
+F = np.array([
+    [1, 0, dt, 0.5*dt**2],
+    [0, 1, 0, dt],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1],
+])
+
+X, P = predict(x=X, P=P, F=F, Q=0)
+
+#two options for Q
+Q_filterpy = Q_discrete_white_noise(dim=4, dt=1., var=7)
+
+Q_manual = np.array([
+    [0.7, 0, 0, 0],
+    [0, 9.818160966, 0, 0],
+    [0, 0, 47.032652132, 0],
+    [0, 0, 0, 0.333721444],
+])
