@@ -36,7 +36,7 @@ import pandas as pd
 #extract respiratory rate data
 
 #extract heart rate data 
-with open('/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/HeartRate.csv', 'r') as file:
+with open('/home/asyaakkus/Senior-Project-Modeling-Noah/HeartRate.csv', 'r') as file:
     reader = csv.DictReader(file)
     
     column_data = [row[col_to_extract] for row in reader]
@@ -45,7 +45,7 @@ heart_rate = np.array(column_data)
 
 
 #extract respiratory rate data 
-with open('/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/RespiratoryRate.csv', 'r') as file: 
+with open('/home/asyaakkus/Senior-Project-Modeling-Noah/RespiratoryRate.csv', 'r') as file: 
     reader = csv.DictReader(file)
 
     column_data = [row[col_to_extract] for row in reader]
@@ -54,7 +54,7 @@ respiratory_rate = np.array(column_data)
 
 
 #extract basal energy burned data 
-with open('/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv', 'r') as file: 
+with open('/home/asyaakkus/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv', 'r') as file: 
     reader = csv.DictReader(file)
 
     column_data = [row[col_to_extract] for row in reader]
@@ -93,7 +93,7 @@ RR last timestamp:  [Timestamp('2024-09-05 08:27:27-0400', tz='UTC-04:00') 11.0]
 '''
 
 #data processing for respiratory rate 
-df = pd.read_csv("/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/RespiratoryRate.csv")
+df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/RespiratoryRate.csv")
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -117,7 +117,7 @@ processed_respiratory = aligned_rr_df.to_numpy().flatten()
 
 
 #data processing for heart rate 
-df = pd.read_csv("/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/HeartRate.csv")
+df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/HeartRate.csv")
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -147,7 +147,7 @@ print(aligned_hr_df)
 processed_heart_rate = aligned_hr_df.to_numpy().flatten()
 
 #data processing for basal metabolic rate 
-df = pd.read_csv("/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv")
+df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv")
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -180,3 +180,18 @@ processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 unified_array = np.array([processed_basal_rate[650:], processed_heart_rate[650:], processed_respiratory[650:]])
 P_threebythree = np.cov(unified_array)
 print(P_threebythree)
+
+#creation of p matrix with core body temp lines added 
+final_P = np.array([
+    [7, 0,            0,            0         ],
+    [0, 98.18160966, -34.72900601, -1.22780453],
+    [0, -34.72900601, 470.32652132, 3.1424907],
+    [0, -1.22780453,  3.1424907,    3.33721444],
+])
+
+X = np.array([
+    [97],
+    [np.mean(processed_basal_rate[650:])],
+    [np.mean(processed_heart_rate[650:])],
+    [np.mean(processed_respiratory[650:])],
+])
