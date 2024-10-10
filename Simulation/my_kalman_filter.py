@@ -177,6 +177,6 @@ print(aligned_basal_df)
 processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 
 #creation of P matrix values 
-unified_array = np.array([processed_basal_rate[5500:], processed_heart_rate[5500:], processed_respiratory[5500:]])
+unified_array = np.array([processed_basal_rate[650:], processed_heart_rate[650:], processed_respiratory[650:]])
 P_threebythree = np.cov(unified_array)
 print(P_threebythree)
