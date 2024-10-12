@@ -211,4 +211,37 @@ Q_manual = np.array([
     [0, 0, 47.032652132, 0],
     [0, 0, 0, 0.333721444],
 ])
-X, P = predict(x=X, P=final_P, F=F, Q=Q_filterpy)
+
+H = np.array([
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1],
+    [0, 0, 0, 0]
+])
+
+R = np.array([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]
+])
+
+#X, final_P = predict(x=X, P=final_P, F=F, Q=Q_filterpy)
+
+#rough KF script 
+def the_filter(X, final_P, R, Q, dt=1.0):
+
+    kf = KalmanFilter(dim_x=4, dim_z=1)
+    kf.X = np.array([x[0], x[1]]) # location and velocity
+    kf.F = np.array([[1., dt],
+                     [0.,  1.]])  # state transition matrix
+    kf.H = np.array([[1., 0]])    # Measurement function
+    kf.R *= R                     # measurement uncertainty
+    if np.isscalar(P):
+        kf.P *= P                 # covariance matrix 
+    else:
+        kf.P[:] = P               # [:] makes deep copy
+    if np.isscalar(Q):
+        kf.Q = Q_discrete_white_noise(dim=2, dt=dt, var=Q)
+    else:
+        kf.Q[:] = Q
+    return kf
