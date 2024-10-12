@@ -32,7 +32,8 @@ import csv
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
-from filterpy.kalman import predict 
+from filterpy.kalman import predict
+from filterpy.common import Q_discrete_white_noise
 #extract respiratory rate data
 
 #extract heart rate data 
@@ -71,7 +72,6 @@ RR = convert_to_integer(respiratory_rate)
 BE = convert_to_integer(basal_energy_burned)
 HR = convert_to_integer(heart_rate)
 
-print(np.shape(RR), np.shape(BE), np.shape(HR))
 
 '''
 we find the P matrix by taking the variance of each of the arrays at consistent time stamps. for now, we will just focus on 
@@ -112,7 +112,6 @@ aligned_rr_df = pd.DataFrame({
     'value': respir_interpolated
 })
 
-print(aligned_rr_df)
 processed_respiratory = aligned_rr_df.to_numpy().flatten()
 
 
@@ -143,7 +142,6 @@ aligned_hr_df = pd.DataFrame({
     'value': heartrate_interpolated
 })
 
-print(aligned_hr_df)
 processed_heart_rate = aligned_hr_df.to_numpy().flatten()
 
 #data processing for basal metabolic rate 
@@ -172,14 +170,12 @@ basal_interpolated = df['value'].reindex(common_time).interpolate()
 aligned_basal_df = pd.DataFrame({
     'value': basal_interpolated
 })
-print(aligned_basal_df)
 
 processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 
 #creation of P matrix values 
 unified_array = np.array([processed_basal_rate[650:], processed_heart_rate[650:], processed_respiratory[650:]])
 P_threebythree = np.cov(unified_array)
-print(P_threebythree)
 
 #creation of p matrix with core body temp lines added 
 final_P = np.array([
@@ -205,7 +201,6 @@ F = np.array([
     [0, 0, 0, 1],
 ])
 
-X, P = predict(x=X, P=P, F=F, Q=0)
 
 #two options for Q
 Q_filterpy = Q_discrete_white_noise(dim=4, dt=1., var=7)
@@ -216,3 +211,4 @@ Q_manual = np.array([
     [0, 0, 47.032652132, 0],
     [0, 0, 0, 0.333721444],
 ])
+X, P = predict(x=X, P=final_P, F=F, Q=Q_filterpy)
