@@ -2,7 +2,10 @@ from datetime import timedelta
 import pandas as pd
 import matplotlib.pyplot as plt
 
-file_path = '/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/HeartRate.csv'
+file_path = 'HKCategoryTypeIdentifierSleepAnalysis.csv'
+
+
+#two things must change: how the interval is chosen, and what values go into the data
 
 
 def aggregate_data_by_interval(file, interval):
@@ -12,7 +15,15 @@ def aggregate_data_by_interval(file, interval):
 
     # Drop rows where 'start' could not be converted to datetime
     df = df.dropna(subset=['start'])
+
+    # Check if it's a sleep data file based on the presence of 'end' column
+    is_sleep_data = interval == 'sleep' 
     
+    # For sleep data, convert 'end' to datetime
+    if is_sleep_data:
+        df['end'] = pd.to_datetime(df['end'], errors='coerce')
+        df = df.dropna(subset=['end'])  # Drop rows with invalid end dates
+
     # Sort by 'start' time to ensure chronological order
     df = df.sort_values(by='start')
 
@@ -26,33 +37,65 @@ def aggregate_data_by_interval(file, interval):
         time_delta = timedelta(hours=1)
     elif interval == 'days':
         time_delta = timedelta(days=1)
+    elif interval == 'sleep':
+        time_delta = timedelta(hours=8)
     else:
-        raise ValueError("Interval must be 'minutes', 'hours', or 'days'")
+        raise ValueError("Interval must be 'minutes', 'hours', 'days', or 'sleep'")
 
     # Create an empty list to store results
     results = []
     time_counter = 0
     current_time = start_time
 
-    while current_time <= df['start'].max():
-        # Filter the data for the current interval
-        interval_data = df[(df['start'] >= current_time) & (df['start'] < current_time + time_delta)]
+    if interval == 'sleep' and is_sleep_data:
+        # Sleep-specific aggregation
+        sleep_start = None
+        sleep_end = None
 
-        if not interval_data.empty:
-            # Calculate the mean of 'value' for the interval
-            mean_value = interval_data['value'].mean()
+        for index, row in df.iterrows():
+            if sleep_start is None:
+                sleep_start = row['start']
+                sleep_end = row['end']
+            else:
+                # Check for more than 8-hour gap, to separate sleep spans
+                if row['start'] - sleep_end > time_delta:
+                    results.append({
+                        'source': row['source'],  # Source from current row
+                        'time': sleep_start,
+                        'end': sleep_end,
+                        'value': (sleep_end - sleep_start).total_seconds() / 3600,  # Duration in hours
+                    })
+                    sleep_start = row['start']
+                    sleep_end = row['end']
+                else:
+                    sleep_end = row['end']
 
-            # Add the aggregated result to the results list
+        # Add final sleep span if exists
+        if sleep_start is not None:
             results.append({
-                'source': interval_data['source'].iloc[0],  # Take the source from the first row
-                'time': time_counter,
-                'value': mean_value,
-                'unit': interval_data['unit'].iloc[0],  # Take the unit from the first row
+                'source': df['source'].iloc[-1],
+                'time': sleep_start,
+                'end': sleep_end,
+                'value': (sleep_end - sleep_start).total_seconds() / 3600,
             })
+    
+    else:
+        # General aggregation for non-sleep data files
+        while current_time <= df['start'].max():
+            interval_data = df[(df['start'] >= current_time) & (df['start'] < current_time + time_delta)]
+            
+            if not interval_data.empty:
+                mean_value = interval_data['value'].mean()
+                results.append({
+                    'source': interval_data['source'].iloc[0],
+                    'time': time_counter,
+                    'value': mean_value,
+                    'unit': interval_data['unit'].iloc[0],
+                })
 
-        # Move to the next interval
-        current_time += time_delta
-        time_counter += 1
+            # Move to the next interval
+            current_time += time_delta
+            time_counter += 1
 
     # Convert results into a DataFrame
     result_df = pd.DataFrame(results)
@@ -62,10 +105,10 @@ def aggregate_data_by_interval(file, interval):
 # Get current axis
 ax = plt.gca()
 
-aggregated_df = aggregate_data_by_interval(file_path, 'minutes')
+aggregated_df = aggregate_data_by_interval(file_path, interval = 'sleep')
 aggregated_df.plot(kind='line', x='time', y='value')
 plt.show()
 
 
 # Saving the result to a new CSV file
-aggregated_df.to_csv('PureHeartRate.csv', index=False)
+aggregated_df.to_csv('PureSleepTime.csv', index=False)
