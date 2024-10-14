@@ -34,6 +34,8 @@ col_to_extract = "value"
 import pandas as pd 
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
+from filterpy.kalman import KalmanFilter
+
 #extract respiratory rate data
 
 #extract heart rate data 
@@ -177,7 +179,20 @@ processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 unified_array = np.array([processed_basal_rate[650:], processed_heart_rate[650:], processed_respiratory[650:]])
 P_threebythree = np.cov(unified_array)
 
-#creation of p matrix with core body temp lines added 
+# Preprocess your data into arrays
+basal_rate_data = np.array(processed_basal_rate[650:])
+heart_rate_data = np.array(processed_heart_rate[650:])
+respiratory_data = np.array(processed_respiratory[650:])
+
+# Number of time steps based on your data length
+n_steps = len(basal_rate_data)
+
+# Create zs matrix: (n_steps, 3) where each row corresponds to measurements at one time step
+zs = np.column_stack((basal_rate_data, heart_rate_data, respiratory_data))
+
+# Define initial matrices (already provided by you)
+
+# Initial P matrix (state covariance matrix)
 final_P = np.array([
     [7, 0,            0,            0         ],
     [0, 98.18160966, -34.72900601, -1.22780453],
@@ -185,6 +200,7 @@ final_P = np.array([
     [0, -1.22780453,  3.1424907,    3.33721444],
 ])
 
+# Initial state X
 X = np.array([
     [97],
     [np.mean(processed_basal_rate[650:])],
@@ -192,8 +208,8 @@ X = np.array([
     [np.mean(processed_respiratory[650:])],
 ])
 
-#design process model:
-dt = 1 #the time changes consistently every second in our data 
+# Process model matrix F
+dt = 1  # 1 second time step
 F = np.array([
     [1, 0, dt, 0.5*dt**2],
     [0, 1, 0, dt],
@@ -201,10 +217,15 @@ F = np.array([
     [0, 0, 0, 1],
 ])
 
+# Measurement noise covariance matrix R
+R = np.array([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]
+])
 
-#two options for Q
+# Two options for Q (process noise covariance)
 Q_filterpy = Q_discrete_white_noise(dim=4, dt=1., var=7)
-
 Q_manual = np.array([
     [0.7, 0, 0, 0],
     [0, 9.818160966, 0, 0],
@@ -212,36 +233,58 @@ Q_manual = np.array([
     [0, 0, 0, 0.333721444],
 ])
 
+# Measurement matrix H (maps state to measurement)
 H = np.array([
-    [0, 1, 0, 0],
-    [0, 0, 1, 0],
-    [0, 0, 0, 1],
-    [0, 0, 0, 0]
+    [0, 1, 0, 0],  # basal rate mapping
+    [0, 0, 1, 0],  # heart rate mapping
+    [0, 0, 0, 1]   # respiratory rate mapping
 ])
 
-R = np.array([
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1]
-])
-
-#X, final_P = predict(x=X, P=final_P, F=F, Q=Q_filterpy)
-
-#rough KF script 
-def the_filter(X, final_P, R, Q, dt=1.0):
-
-    kf = KalmanFilter(dim_x=4, dim_z=1)
-    kf.X = np.array([x[0], x[1]]) # location and velocity
-    kf.F = np.array([[1., dt],
-                     [0.,  1.]])  # state transition matrix
-    kf.H = np.array([[1., 0]])    # Measurement function
-    kf.R *= R                     # measurement uncertainty
-    if np.isscalar(P):
-        kf.P *= P                 # covariance matrix 
-    else:
-        kf.P[:] = P               # [:] makes deep copy
-    if np.isscalar(Q):
-        kf.Q = Q_discrete_white_noise(dim=2, dt=dt, var=Q)
-    else:
-        kf.Q[:] = Q
+# Kalman filter initialization
+def initialize_kalman_filter(X, P, R, Q, F, H):
+    kf = KalmanFilter(dim_x=4, dim_z=3)
+    kf.x = X
+    kf.P = P
+    kf.R = R
+    kf.Q = Q
+    kf.F = F
+    kf.H = H
     return kf
+
+# Kalman filter loop: Predict and update steps
+def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
+    kf = initialize_kalman_filter(X, P, R, Q, F, H)
+    
+    # Arrays to store state estimates and covariances
+    xs, cov = [], []
+    
+    for i in range(n_steps):
+        kf.predict()  # Predict the next state
+        z = zs[i]     # Get the measurements for this time step
+        kf.update(z)  # Update with the measurement
+        
+        xs.append(kf.x)  # Store the state estimate
+        cov.append(kf.P) # Store the covariance matrix
+    
+    # Convert results to numpy arrays for easy handling
+    xs = np.array(xs)
+    cov = np.array(cov)
+    
+    return xs, cov
+
+# Run the Kalman filter with your data
+xs, Ps = run_kalman_filter(X, final_P, R, Q_manual, F, H, zs, n_steps)
+
+# xs now contains state estimates, including core body temperature estimates over time
+print(xs)
+
+print(np.shape(xs))
+
+xs_reshaped = xs.reshape(613230, 4)
+
+xs_cbt = xs_reshaped[:1440, 0]
+ys_cbt = np.arange(len(xs_cbt))
+print(len(xs_cbt))
+
+plt.plot(xs_cbt, ys_cbt)
+plt.savefig('my_plot.png')
