@@ -2,7 +2,7 @@ from datetime import timedelta
 import pandas as pd
 import matplotlib.pyplot as plt
 
-file_path = '/Users/noahh/Documents/GitHub/Senior-Project-Modeling-Noah/HeartRate.csv'
+file_path = 'trials/cleaned_sleep_analysis.csv'
 
 
 def aggregate_data_by_interval(file, interval):
@@ -44,16 +44,17 @@ def aggregate_data_by_interval(file, interval):
 
             # Add the aggregated result to the results list
             results.append({
-                'source': interval_data['source'].iloc[0],  # Take the source from the first row
+                # 'source': interval_data['source'].iloc[0],  # Take the source from the first row
                 'time': time_counter,
                 'value': mean_value,
-                'unit': interval_data['unit'].iloc[0],  # Take the unit from the first row
+                # 'unit': interval_data['unit'].iloc[0],  # Take the unit from the first row
             })
 
         # Move to the next interval
         current_time += time_delta
         time_counter += 1
 
+    print("loop done")
     # Convert results into a DataFrame
     result_df = pd.DataFrame(results)
     return result_df
@@ -62,10 +63,11 @@ def aggregate_data_by_interval(file, interval):
 # Get current axis
 ax = plt.gca()
 
-aggregated_df = aggregate_data_by_interval(file_path, 'minutes')
+aggregated_df = aggregate_data_by_interval(file_path, 'hours')
+print("plotting")
 aggregated_df.plot(kind='line', x='time', y='value')
 plt.show()
 
 
 # Saving the result to a new CSV file
-aggregated_df.to_csv('PureHeartRate.csv', index=False)
+aggregated_df.to_csv('trials/maybe_cleaned_sleep_analysis.csv', index=False)
