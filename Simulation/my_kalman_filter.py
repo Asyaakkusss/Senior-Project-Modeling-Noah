@@ -273,7 +273,7 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     return xs, cov
 
 # Run the Kalman filter with your data
-xs, Ps = run_kalman_filter(X, final_P, R, Q_manual, F, H, zs, n_steps)
+xs, Ps = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(xs)
@@ -287,4 +287,4 @@ ys_cbt = np.arange(len(xs_cbt))
 print(len(xs_cbt))
 
 plt.plot(xs_cbt, ys_cbt)
-plt.savefig('my_plot.png')
+plt.savefig('my_plot_kal.png')
