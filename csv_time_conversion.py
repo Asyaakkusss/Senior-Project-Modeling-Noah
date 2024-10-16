@@ -4,10 +4,6 @@ import matplotlib.pyplot as plt
 
 file_path = 'HKCategoryTypeIdentifierSleepAnalysis.csv'
 
-
-#two things must change: how the interval is chosen, and what values go into the data
-
-
 def aggregate_data_by_interval(file, interval):
     # Convert 'start' to datetime
     df = pd.read_csv(file)
