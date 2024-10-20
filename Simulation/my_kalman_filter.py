@@ -210,7 +210,7 @@ X = np.array([
     [np.mean(processed_respiratory[650:])],
 ])
 
-# Process model matrix F
+# Process model matrix F, equivalent to A in math equations
 dt = 1  # 1 second time step
 F = np.array([
     [1, 0, dt, 0.5*dt**2],
