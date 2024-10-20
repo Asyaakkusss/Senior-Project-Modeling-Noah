@@ -30,6 +30,7 @@ R = [R_HR 0]
 import numpy as np 
 import csv 
 import matplotlib.pyplot as plt 
+import os
 col_to_extract = "value"
 import pandas as pd 
 from filterpy.kalman import predict
@@ -39,6 +40,7 @@ from filterpy.kalman import KalmanFilter
 #extract respiratory rate data
 
 #extract heart rate data 
+home_dir = "/Users/monugoel/Desktop/CSDS_395"
 with open('/home/asyaakkus/Senior-Project-Modeling-Noah/HeartRate.csv', 'r') as file:
     reader = csv.DictReader(file)
     
