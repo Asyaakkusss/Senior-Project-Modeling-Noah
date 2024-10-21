@@ -1,0 +1,138 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from filterpy.kalman import KalmanFilter
+from numpy.random import randn
+
+# Time step and angular velocity
+dt = 1.0  # Time step
+omega = np.pi / 6  # Angular velocity (30 degrees per second)
+
+# Function to generate a 4x4 rotation matrix rotating in xy and xw planes
+def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
+    """Returns a combined 4x4 rotation matrix for rotation in the xy-plane and xw-plane."""
+    R_xy = np.array([[np.cos(theta_xy), -np.sin(theta_xy), 0, 0],
+                     [np.sin(theta_xy), np.cos(theta_xy),  0, 0],
+                     [0, 0, 1, 0],
+                     [0, 0, 0, 1]])
+    
+    R_xw = np.array([[np.cos(theta_xw), 0, 0, -np.sin(theta_xw)],
+                     [0, 1, 0, 0],
+                     [0, 0, 1, 0],
+                     [np.sin(theta_xw), 0, 0, np.cos(theta_xw)]])
+    
+    return R_xy @ R_xw  # Combine the two rotations
+
+# Generate true positions in 4D space (rotation in xy and xw planes)
+def generate_true_positions_4d(omega_xy, omega_xw, dt, num_steps):
+    true_positions = []
+    state = np.array([1, 0, 0, 0])  # Initial state in 4D space
+    for i in range(num_steps):
+        theta_xy = omega_xy * i * dt  # Rotation angle for xy-plane
+        theta_xw = omega_xw * i * dt  # Rotation angle for xw-plane
+        R = rotation_matrix_4d_xy_xw(theta_xy, theta_xw)
+        state = R @ state  # Rotate the state vector
+        true_positions.append(state)
+    return np.array(true_positions)
+
+# Add Gaussian noise to the measurements
+def generate_noisy_measurements(true_positions, noise_std):
+    noisy_measurements = true_positions + randn(*true_positions.shape) * noise_std
+    return noisy_measurements
+
+# Initialize the Kalman Filter for 4D data
+def setup_kalman_filter_4d():
+    kf = KalmanFilter(dim_x=4, dim_z=4)
+    
+    # Initial state (start in 4D space at [1, 0, 0, 0])
+    kf.x = np.array([1, 0, 0, 0])
+    
+    # State transition matrix (initially identity, updated in the loop)
+    kf.F = np.eye(4)
+    
+    # Measurement matrix (we observe all 4 dimensions directly)
+    kf.H = np.eye(4)
+    
+    # Measurement noise covariance (assume some noise in measurements)
+    kf.R = np.eye(4) * 0.5
+    
+    # Process noise covariance (model uncertainty)
+    kf.Q = np.eye(4) * 0.01
+    
+    # Initial uncertainty in the state estimate
+    kf.P = np.eye(4)
+    
+    return kf
+
+# Main function to simulate data and apply Kalman filtering
+def simulate_and_apply_kalman_4d(omega_xy, omega_xw, dt, num_steps, noise_std):
+    # Generate true positions in 4D space
+    true_positions = generate_true_positions_4d(omega_xy, omega_xw, dt, num_steps)
+    
+    # Generate noisy measurements
+    noisy_measurements = generate_noisy_measurements(true_positions, noise_std)
+    
+    # Initialize the Kalman Filter
+    kf = setup_kalman_filter_4d()
+    
+    # Lists to store predictions
+    predictions = []
+    
+    # Apply Kalman filtering step-by-step
+    for i in range(num_steps):
+        # Update state transition matrix based on current rotation angles
+        theta_xy = omega_xy * i * dt
+        theta_xw = omega_xw * i * dt
+        kf.F = rotation_matrix_4d_xy_xw(theta_xy, theta_xw)
+        
+        # Predict the next state
+        kf.predict()
+        
+        # Update the state estimate with noisy measurement
+        kf.update(noisy_measurements[i])
+        
+        # Store the prediction
+        predictions.append(kf.x.copy())
+    
+    return np.array(true_positions), np.array(noisy_measurements), np.array(predictions)
+
+# Parameters
+omega_xy = np.pi / 6  # Angular velocity for xy-plane
+omega_xw = np.pi / 8  # Angular velocity for xw-plane
+dt = 1.0  # Time step
+num_steps = 50  # Number of time steps
+noise_std = 0.5  # Standard deviation of the noise
+
+# Run the simulation and Kalman filter
+true_positions, noisy_measurements, predictions = simulate_and_apply_kalman_4d(omega_xy, omega_xw, dt, num_steps, noise_std)
+
+# Plotting the results for two dimensions at a time (xy-plane and xw-plane)
+plt.figure(figsize=(10, 5))
+
+# XY-plane
+plt.subplot(1, 2, 1)
+plt.plot(true_positions[:, 0], true_positions[:, 1], label='True Path (XY)', color='blue')
+plt.scatter(noisy_measurements[:, 0], noisy_measurements[:, 1], label='Noisy Measurements (XY)', color='red')
+plt.plot(predictions[:, 0], predictions[:, 1], label='Kalman Filter Estimate (XY)', color='green', linestyle='--')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('XY-Plane')
+plt.legend()
+
+# XW-plane
+time_vals = range(0, num_steps)
+plt.subplot(1, 2, 2)
+#plt.plot(true_positions[:, 0], true_positions[:, 3], label='True Path (XW)', color='blue')
+#plt.scatter(noisy_measurements[:, 0], noisy_measurements[:, 3], label='Noisy Measurements (XW)', color='red')
+#plt.plot(predictions[:, 0], predictions[:, 3], label='Kalman Filter Estimate (XW)', color='green', linestyle='--')
+
+plt.plot(time_vals, true_positions[:, 3], label='True Path (XW)', color='blue')
+plt.scatter(time_vals, noisy_measurements[:, 3], label='Noisy Measurements (XW)', color='red')
+plt.plot(time_vals, predictions[:, 3], label='Kalman Filter Estimate (XW)', color='green', linestyle='--')
+
+plt.xlabel('X')
+plt.ylabel('W')
+plt.title('XW-Plane')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
