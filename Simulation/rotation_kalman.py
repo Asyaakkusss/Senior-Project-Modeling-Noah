@@ -41,7 +41,7 @@ kf = KalmanFilter(dim_x=2, dim_z=2)
 kf.F = rotation_matrix(omega * dt)  # state transition matrix (rotation matrix)
 kf.H = np.eye(2)  # measurement matrix (we directly measure position)
 kf.R = np.eye(2) * 0.5  # measurement noise covariance
-kf.Q = np.eye(2) * 0.01  # process noise covariance
+kf.Q = np.eye(2) * 0.01  # process noise    
 kf.x = np.array([1, 0])  # initial state (start on the unit circle at (1,0))
 kf.P = np.eye(2)  # initial uncertainty covariance
 

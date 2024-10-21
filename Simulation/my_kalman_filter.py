@@ -226,11 +226,6 @@ X = np.array([
 dt = 1  # 1 second time step
 
 
-def rotation_matrix(theta):
-    return np.array([[np.cos(theta), -np.sin(theta)],
-                     [np.sin(theta),  np.cos(theta)]])
-
-
 F = np.array([
     [1, 0, dt, 0.5*dt**2],
     [0, 1, 0, dt],
@@ -330,15 +325,16 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
 xs, Ps = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
-print(xs)
-
+print(type(xs))
 print(np.shape(xs))
 
+
 xs_reshaped = xs.reshape(613230, 4)
+np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
 
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
 
 
-plt.plot(xs_cbt, ys_cbt)
+plt.plot(ys_cbt, xs_cbt)
 plt.savefig('my_plot_kal_rot.png')
