@@ -41,7 +41,7 @@ from filterpy.kalman import KalmanFilter
 
 #extract heart rate data 
 home_dir = "/Users/monugoel/Desktop/CSDS_395"
-with open('/home/asyaakkus/Senior-Project-Modeling-Noah/HeartRate.csv', 'r') as file:
+with open(os.path.join(home_dir, 'HeartRate.csv'), 'r') as file:
     reader = csv.DictReader(file)
     
     column_data = [row[col_to_extract] for row in reader]
@@ -50,7 +50,7 @@ heart_rate = np.array(column_data)
 
 
 #extract respiratory rate data 
-with open('/home/asyaakkus/Senior-Project-Modeling-Noah/RespiratoryRate.csv', 'r') as file: 
+with open(os.path.join(home_dir, 'RespiratoryRate.csv') , 'r') as file: 
     reader = csv.DictReader(file)
 
     column_data = [row[col_to_extract] for row in reader]
@@ -59,7 +59,7 @@ respiratory_rate = np.array(column_data)
 
 
 #extract basal energy burned data 
-with open('/home/asyaakkus/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv', 'r') as file: 
+with open(os.path.join(home_dir, 'BasalEnergyBurned.csv'), 'r') as file: 
     reader = csv.DictReader(file)
 
     column_data = [row[col_to_extract] for row in reader]
@@ -97,7 +97,7 @@ RR last timestamp:  [Timestamp('2024-09-05 08:27:27-0400', tz='UTC-04:00') 11.0]
 '''
 
 #data processing for respiratory rate 
-df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/RespiratoryRate.csv")
+df = pd.read_csv(os.path.join(home_dir, "RespiratoryRate.csv"))
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -106,10 +106,15 @@ df['start'] = pd.to_datetime(df['start'])
 df.set_index('start', inplace=True)
 
 #normalize them to a constant frequency 
-common_time = pd.date_range(start=df.index.min(), end=df.index.max(), freq='min')
+
+start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+#common_time = pd.date_range(start=df.index.min(), end=df.index.max(), freq='min')
+common_time = pd.date_range(start=start_time, end=end_time, freq='min')
 
 #align values with the times 
 respir_interpolated = df['value'].reindex(common_time).interpolate()
+
 
 #create a dataframe with start and value columns 
 aligned_rr_df = pd.DataFrame({
@@ -120,7 +125,7 @@ processed_respiratory = aligned_rr_df.to_numpy().flatten()
 
 
 #data processing for heart rate 
-df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/HeartRate.csv")
+df = pd.read_csv(os.path.join(home_dir, "HeartRate.csv"))
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -149,7 +154,7 @@ aligned_hr_df = pd.DataFrame({
 processed_heart_rate = aligned_hr_df.to_numpy().flatten()
 
 #data processing for basal metabolic rate 
-df = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/BasalEnergyBurned.csv")
+df = pd.read_csv(os.path.join(home_dir, "BasalEnergyBurned.csv"))
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -178,6 +183,7 @@ aligned_basal_df = pd.DataFrame({
 processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 
 #creation of P matrix values 
+
 unified_array = np.array([processed_basal_rate[650:], processed_heart_rate[650:], processed_respiratory[650:]])
 P_threebythree = np.cov(unified_array)
 
@@ -185,12 +191,18 @@ P_threebythree = np.cov(unified_array)
 basal_rate_data = np.array(processed_basal_rate[650:])
 heart_rate_data = np.array(processed_heart_rate[650:])
 respiratory_data = np.array(processed_respiratory[650:])
+time_vals = range(0, len(basal_rate_data))
+
+#plt.figure(figsize=(8, 8))
+#plt.plot(time_vals, respiratory_data)
+#plt.show()
 
 # Number of time steps based on your data length
 n_steps = len(basal_rate_data)
 
 # Create zs matrix: (n_steps, 3) where each row corresponds to measurements at one time step
 zs = np.column_stack((basal_rate_data, heart_rate_data, respiratory_data))
+
 
 # Define initial matrices (already provided by you)
 
@@ -212,12 +224,39 @@ X = np.array([
 
 # Process model matrix F, equivalent to A in math equations
 dt = 1  # 1 second time step
+
+
+def rotation_matrix(theta):
+    return np.array([[np.cos(theta), -np.sin(theta)],
+                     [np.sin(theta),  np.cos(theta)]])
+
+
 F = np.array([
     [1, 0, dt, 0.5*dt**2],
     [0, 1, 0, dt],
     [0, 0, 1, 0],
     [0, 0, 0, 1],
 ])
+
+def rotation_matrix(theta):
+    return np.array([[np.cos(theta), -np.sin(theta), 0, 0],
+                     [np.sin(theta),  np.cos(theta), 0, 0],
+                     [0,0,1,0],
+                     [0,0,0,1]])
+
+def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
+    """Returns a combined 4x4 rotation matrix for rotation in the xy-plane and xw-plane."""
+    R_xy = np.array([[np.cos(theta_xy), -np.sin(theta_xy), 0, 0],
+                     [np.sin(theta_xy), np.cos(theta_xy),  0, 0],
+                     [0, 0, 1, 0],
+                     [0, 0, 0, 1]])
+    
+    R_xw = np.array([[np.cos(theta_xw), 0, 0, -np.sin(theta_xw)],
+                     [0, 1, 0, 0],
+                     [0, 0, 1, 0],
+                     [np.sin(theta_xw), 0, 0, np.cos(theta_xw)]])
+    
+    return R_xy @ R_xw  # Combine the two rotations
 
 # Measurement noise covariance matrix R
 R = np.array([
@@ -253,26 +292,39 @@ def initialize_kalman_filter(X, P, R, Q, F, H):
     kf.H = H
     return kf
 
+omega_xy = np.pi/6
+omega_xw = np.pi/8
+omega = np.pi/6
 # Kalman filter loop: Predict and update steps
 def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
-    
+    F_rotation = rotation_matrix(omega)
+    kf_rot = initialize_kalman_filter(X, P, R, Q, F_rotation, H)
     # Arrays to store state estimates and covariances
     xs, cov = [], []
-    
+    xs_rot = []
     for i in range(n_steps):
+
+        theta_xy = omega_xy * i * dt
+        theta_xw = omega_xw * i * dt
+        #kf_rot.F = rotation_matrix_4d_xy_xw(theta_xy, theta_xw)
+
         kf.predict()  # Predict the next state
+        kf_rot.predict()
         z = zs[i]     # Get the measurements for this time step
         kf.update(z)  # Update with the measurement
-        
+        kf_rot.update(z)
+
         xs.append(kf.x)  # Store the state estimate
+        xs_rot.append(kf_rot.x)
         cov.append(kf.P) # Store the covariance matrix
     
     # Convert results to numpy arrays for easy handling
     xs = np.array(xs)
     cov = np.array(cov)
-    
-    return xs, cov
+    xs_rot = np.array(xs_rot)
+
+    return xs_rot, cov
 
 # Run the Kalman filter with your data
 xs, Ps = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
@@ -286,7 +338,7 @@ xs_reshaped = xs.reshape(613230, 4)
 
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
-print(len(xs_cbt))
+
 
 plt.plot(xs_cbt, ys_cbt)
-plt.savefig('my_plot_kal.png')
+plt.savefig('my_plot_kal_rot.png')
