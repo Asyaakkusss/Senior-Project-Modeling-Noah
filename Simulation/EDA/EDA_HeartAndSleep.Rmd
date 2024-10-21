@@ -1,0 +1,147 @@
+---
+title: "EDA_CSDS395"
+author: "Ashley Sah"
+date: "2024-10-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+df <- read.csv("/Users/monugoel/Desktop/CSDS_395/HeartRate.csv")
+df <- df %>%
+  arrange(start) %>%
+  mutate(time_diff = difftime(start, lag(start, default = first(start)), units = "mins")) %>%
+  mutate(time_diff_sec =  difftime(start, lag(start, default = first(start)), units = "secs"))
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+df %>%
+  group_by(time_diff) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+df_pure <- read.csv("/Users/monugoel/Desktop/CSDS_395/PureHeartRate.csv")
+```
+
+```{r}
+sleep_data <- read.csv("/Users/monugoel/Desktop/CSDS_395/HKCategoryTypeIdentifierSleepAnalysis.csv")
+unique(sleep_data$value)
+
+sleep_data %>%
+  group_by(value)%>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+```
+```{r}
+colors <- c("HKCategoryValueSleepAnalysisInBed" = "red", 
+            "HKCategoryValueSleepAnalysisAsleepCore" = "black", 
+            "HKCategoryValueSleepAnalysisAwake" = "green",
+            "HKCategoryValueSleepAnalysisAsleepREM","blue",
+            "HKCategoryValueSleepAnalysisAsleepDeep", "purple",
+            "HKCategoryValueSleepAnalysisAsleepUnspecified", "yellow")
+
+
+sleep_data <- sleep_data %>% mutate(value_cat = as.factor(value))
+```
+
+
+```{r}
+library(plotly)
+p <- plot_ly(data = sleep_data, x = ~start, y = ~value, type = 'scatter', mode = 'lines+markers',
+             line = list(color = ~value), colors = colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))) %>%
+    layout(title = "Interactive Plot of Values Over Time",
+           xaxis = list(title = "Time"),
+           yaxis = list(title = "Value"))
+
+p <- p %>% layout(
+  xaxis = list(
+    rangeslider = list(type = "date"),
+    rangeselector = list(
+      buttons = list(
+        list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+        list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+        list(count = 1, label = "YTD", step = "year", stepmode = "todate"),
+        list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+        list(step = "all")
+      )
+    )
+  )
+)
+
+```
+```{r}
+p2 <- plot_ly(data = sleep_data, x = ~start, y = ~(rep(1, nrow(sleep_data))), text = ~paste("Type:", value),
+             type = 'scatter', mode = 'markers', 
+             marker = list(color = ~value, size = 10)) %>%
+    layout(title = "Events Over Time",
+           xaxis = list(title = "Time"),
+           yaxis = list(title = "Fixed Axis", showticklabels = FALSE, zeroline = FALSE))
+
+p2 <- p2 %>% layout(
+  xaxis = list(
+    rangeslider = list(type = "date"),
+    rangeselector = list(
+      buttons = list(
+        list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+        list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+        list(count = 1, label = "YTD", step = "year", stepmode = "todate"),
+        list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+        list(step = "all")
+      )
+    )
+  )
+)
+
+```
+
+```{r}
+p3 <- plot_ly(data = sleep_data, x = ~start, y = ~(rep(1, nrow(sleep_data))), type = 'scatter', mode = 'markers',
+             marker = list(color = ~colors[value_cat], size = 10), text = ~value_cat) %>%
+       layout(title = "Events Over Time",
+              xaxis = list(title = "Time"),
+              yaxis = list(title = "Fixed Axis", showticklabels = FALSE, zeroline = FALSE),
+              xaxis = list(rangeslider = list(type = "date"), 
+                           rangeselector = list(buttons = list(
+                             list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+                             list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+                             list(count = 1, label = "YTD", step = "year", stepmode = "todate"),
+                             list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+                             list(step = "all")
+                           ))))
+
+```
+
+```{r}
+library(lubridate)
+sleep_data <- sleep_data %>% 
+      mutate(hour = hour(start),                    # Extract hour part of the datetime
+             interval = cut(hour, breaks=seq(0, 24, by=2), labels=seq(0, 22, by=2), include.lowest=TRUE, right=FALSE))
+
+```
+
+```{r}
+count_data <- sleep_data %>%
+              group_by(interval) %>%
+              summarise(count = n())
+
+```
+
