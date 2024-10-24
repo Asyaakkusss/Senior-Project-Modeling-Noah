@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import plotly.express as px
 
-home_dir = "/Users/monugoel/Desktop/CSDS_395/"
+home_dir = "F:/FALL 2024/Senior-Project-Modeling-Noah"
 df = pd.read_csv(os.path.join(home_dir, "HeartRate.csv"))
 # Convert 'start' column to datetime
 df['start'] = pd.to_datetime(df['start'])

@@ -40,7 +40,7 @@ from filterpy.kalman import KalmanFilter
 #extract respiratory rate data
 
 #extract heart rate data 
-home_dir = "/Users/monugoel/Desktop/CSDS_395"
+home_dir = "F:/FALL 2024/Senior-Project-Modeling-Noah"
 with open(os.path.join(home_dir, 'HeartRate.csv'), 'r') as file:
     reader = csv.DictReader(file)
     
@@ -290,7 +290,7 @@ def initialize_kalman_filter(X, P, R, Q, F, H):
 omega_xy = np.pi/6
 omega_xw = np.pi/8
 omega = np.pi/6
-# Kalman filter loop: Predict and update steps
+# Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
 def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
     F_rotation = rotation_matrix(omega)
@@ -298,8 +298,9 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     # Arrays to store state estimates and covariances
     xs, cov = [], []
     xs_rot = []
+    residuals = []
+    
     for i in range(n_steps):
-
         theta_xy = omega_xy * i * dt
         theta_xw = omega_xw * i * dt
         #kf_rot.F = rotation_matrix_4d_xy_xw(theta_xy, theta_xw)
@@ -313,16 +314,22 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
         xs.append(kf.x)  # Store the state estimate
         xs_rot.append(kf_rot.x)
         cov.append(kf.P) # Store the covariance matrix
+
+        # Calculate residuals (difference between measurement and prediction)
+        predicted_measurement = H @ kf.x  # Predicted measurement
+        residual = z - predicted_measurement
+        residuals.append(residual)
     
     # Convert results to numpy arrays for easy handling
     xs = np.array(xs)
     cov = np.array(cov)
     xs_rot = np.array(xs_rot)
+    residuals = np.array(residuals) 
 
-    return xs_rot, cov
+    return xs_rot, cov, residuals
 
 # Run the Kalman filter with your data
-xs, Ps = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
+xs, Ps, residuals = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
@@ -335,6 +342,33 @@ np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
 
+# Calculate Standard Deviation of Residuals and MSE
+residual_std = np.std(residuals, axis=0)
+mse = np.mean(residuals**2, axis=0)
 
-plt.plot(ys_cbt, xs_cbt)
-plt.savefig('my_plot_kal_rot.png')
+residual_std_cbt = residual_std[:, 0]  # Extract standard deviation for CBT
+mse_cbt = mse[:, 0]  # Extract MSE for CBT
+
+print("Standard Deviation of Residuals:", residual_std_cbt)
+print("Mean Squared Error (MSE):", mse_cbt)
+
+plt.plot(ys_cbt, xs_cbt, label='Predicted CBT')
+plt.title('Predicted Core Body Temperature over Time')
+plt.xlabel('Time Steps')
+plt.ylabel('CBT Estimate')
+plt.legend()
+
+# Plot Residuals
+plt.subplot(2, 1, 2)  # Second plot in the grid
+plt.plot(ys_cbt, residuals[:len(ys_cbt), 0], label='Residuals (CBT)')
+plt.title('Residuals of Core Body Temperature Over Time')
+plt.xlabel('Time Steps')
+plt.ylabel('Residual (Measurement - Prediction)')
+plt.legend()
+
+
+# Show the final plot with both graphs
+plt.tight_layout()
+plt.savefig('my_plot_kal_rot_with_residuals.png')
+plt.show()
+
