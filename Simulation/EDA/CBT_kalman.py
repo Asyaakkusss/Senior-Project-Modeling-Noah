@@ -4,7 +4,7 @@ import os
 import plotly.express as px
 
 home_dir = "/Users/monugoel/Desktop/CSDS_395/"
-df = pd.read_csv(os.path.join(home_dir, "predictions_cbt.csv"), header = None)
+df = pd.read_csv("predictions_cbt.csv", header = None)
 
 """
 # Plotting

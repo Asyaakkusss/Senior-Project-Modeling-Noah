@@ -40,8 +40,8 @@ from filterpy.kalman import KalmanFilter
 #extract respiratory rate data
 
 #extract heart rate data 
-home_dir = "F:/FALL 2024/Senior-Project-Modeling-Noah"
-with open(os.path.join(home_dir, 'HeartRate.csv'), 'r') as file:
+home_dir = "/Users/monugoel/Desktop/CSDS_395"
+with open('HeartRate.csv', 'r') as file:
     reader = csv.DictReader(file)
     
     column_data = [row[col_to_extract] for row in reader]
@@ -50,7 +50,7 @@ heart_rate = np.array(column_data)
 
 
 #extract respiratory rate data 
-with open(os.path.join(home_dir, 'RespiratoryRate.csv') , 'r') as file: 
+with open('RespiratoryRate.csv', 'r') as file: 
     reader = csv.DictReader(file)
 
     column_data = [row[col_to_extract] for row in reader]
@@ -59,7 +59,7 @@ respiratory_rate = np.array(column_data)
 
 
 #extract basal energy burned data 
-with open(os.path.join(home_dir, 'BasalEnergyBurned.csv'), 'r') as file: 
+with open('BasalEnergyBurned.csv', 'r') as file: 
     reader = csv.DictReader(file)
 
     column_data = [row[col_to_extract] for row in reader]
@@ -92,12 +92,10 @@ work at all.
 
 RR first timestamp: [[Timestamp('2023-07-07 01:08:27-0400', tz='UTC-04:00') 17.0]
 RR last timestamp:  [Timestamp('2024-09-05 08:27:27-0400', tz='UTC-04:00') 11.0]]
-
-
 '''
 
 #data processing for respiratory rate 
-df = pd.read_csv(os.path.join(home_dir, "RespiratoryRate.csv"))
+df = pd.read_csv("RespiratoryRate.csv")
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -125,7 +123,7 @@ processed_respiratory = aligned_rr_df.to_numpy().flatten()
 
 
 #data processing for heart rate 
-df = pd.read_csv(os.path.join(home_dir, "HeartRate.csv"))
+df = pd.read_csv("HeartRate.csv")
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -154,7 +152,7 @@ aligned_hr_df = pd.DataFrame({
 processed_heart_rate = aligned_hr_df.to_numpy().flatten()
 
 #data processing for basal metabolic rate 
-df = pd.read_csv(os.path.join(home_dir, "BasalEnergyBurned.csv"))
+df = pd.read_csv("BasalEnergyBurned.csv")
 
 #convert to datetime 
 df['start'] = pd.to_datetime(df['start'])
@@ -216,7 +214,7 @@ final_P = np.array([
 
 # Initial state X
 X = np.array([
-    [97],
+    [70],
     [np.mean(processed_basal_rate[650:])],
     [np.mean(processed_heart_rate[650:])],
     [np.mean(processed_respiratory[650:])],
@@ -224,7 +222,6 @@ X = np.array([
 
 # Process model matrix F, equivalent to A in math equations
 dt = 1  # 1 second time step
-
 
 F = np.array([
     [1, 0, dt, 0.5*dt**2],
@@ -331,13 +328,18 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
 # Run the Kalman filter with your data
 xs, Ps, residuals = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
 
+# Assuming xs contains state estimates and the first component is the Core Body Temperature (CBT)
+cbt_bias = 97
+
+# Add bias to the CBT estimates (first column of xs)
+xs[:, 0] += cbt_bias
+
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
 print(np.shape(xs))
 
-
 xs_reshaped = xs.reshape(613230, 4)
-np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
+np.savetxt("predictions_cbt.csv", xs_reshaped, delimiter=",")
 
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
