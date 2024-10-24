@@ -353,24 +353,27 @@ mse_cbt = mse[:, 0]  # Extract MSE for CBT
 
 print("Standard Deviation of Residuals:", residual_std_cbt)
 print("Mean Squared Error (MSE):", mse_cbt)
+# Create the figure and subplots
+fig, ax = plt.subplots(2, 1, figsize=(8, 6))  # Increase the figure size for better spacing
 
-plt.plot(ys_cbt, xs_cbt, label='Predicted CBT')
-plt.title('Predicted Core Body Temperature over Time')
-plt.xlabel('Time Steps')
-plt.ylabel('CBT Estimate')
-plt.legend()
+# Plot Predicted Core Body Temperature over Time
+ax[0].plot(ys_cbt, xs_cbt, label='Predicted CBT')
+ax[0].set_title('Predicted Core Body Temperature over Time')
+ax[0].set_xlabel('Time Steps')
+ax[0].set_ylabel('CBT Estimate')
+ax[0].legend()
 
-# Plot Residuals
-plt.subplot(2, 1, 2)  # Second plot in the grid
-plt.plot(ys_cbt, residuals[:len(ys_cbt), 0], label='Residuals (CBT)')
-plt.title('Residuals of Core Body Temperature Over Time')
-plt.xlabel('Time Steps')
-plt.ylabel('Residual (Measurement - Prediction)')
-plt.legend()
+# Plot Residuals of Core Body Temperature
+ax[1].plot(ys_cbt, residuals[:len(ys_cbt), 0], label='Residuals (CBT)')
+ax[1].set_title('Residuals of Core Body Temperature Over Time')
+ax[1].set_xlabel('Time Steps')
+ax[1].set_ylabel('Residual (Measurement - Prediction)')
+ax[1].legend()
 
+# Adjust the spacing between subplots to avoid overlap
+plt.subplots_adjust(hspace=0.4)  # Increase the height space between plots
 
-# Show the final plot with both graphs
+# Save and show the plot
 plt.tight_layout()
 plt.savefig('my_plot_kal_rot_with_residuals.png')
 plt.show()
-
