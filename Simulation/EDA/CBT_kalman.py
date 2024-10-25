@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import plotly.express as px
 
-home_dir = "/Users/monugoel/Desktop/CSDS_395/"
+home_dir = "/Users/ritikadevara/Documents/GitHub/Senior-Project-Modeling-Noah"
 df = pd.read_csv(os.path.join(home_dir, "predictions_cbt.csv"), header = None)
 
 """
@@ -27,7 +27,11 @@ plt.ylabel('Heart Rate (count/min)')
 plt.grid(True)
 plt.show()
 """
+df[0] = df[0] + 97
+
 
 fig = px.line(df, x=df.index, y=0, title='CBT Kalman Filtered', labels={'start': 'Time', 'value': 'Temperature (F)'})
 fig.update_xaxes(rangeslider_visible=True)
+fig.update_xaxes(title_text='Time')
+fig.update_yaxes(title_text='Temperature (Fahrenheit)')
 fig.show()
