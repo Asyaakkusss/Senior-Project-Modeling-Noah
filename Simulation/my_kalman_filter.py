@@ -109,9 +109,9 @@ start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
 #common_time = pd.date_range(start=df.index.min(), end=df.index.max(), freq='min')
 common_time = pd.date_range(start=start_time, end=end_time, freq='min')
-
+df['value_normalized'] = (df['value']-np.mean(df['value'].values))/np.std(df['value'].values)
 #align values with the times 
-respir_interpolated = df['value'].reindex(common_time).interpolate()
+respir_interpolated = df['value_normalized'].reindex(common_time).interpolate()
 
 
 #create a dataframe with start and value columns 
@@ -131,18 +131,20 @@ df['start'] = pd.to_datetime(df['start'])
 #the datetime values will be used 
 df.set_index('start', inplace=True)
 
+
 if df.index.duplicated().any():
     df = df[~df.index.duplicated(keep='first')]
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+df['value_normalized'] = (df['value']-np.mean(df['value'].values))/np.std(df['value'].values)
 #normalize them to a constant frequency 
 common_time = pd.date_range(start=start_time, 
                             end=end_time, 
                             freq='min')
 
 #align values with the times 
-heartrate_interpolated = df['value'].reindex(common_time).interpolate()
+heartrate_interpolated = df['value_normalized'].reindex(common_time).interpolate()
 
 #create a dataframe with start and value columns 
 aligned_hr_df = pd.DataFrame({
@@ -165,13 +167,16 @@ if df.index.duplicated().any():
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+
+
 #normalize them to a constant frequency 
 common_time = pd.date_range(start=start_time, 
                             end=end_time, 
                             freq='min')
 
 #align values with the times 
-basal_interpolated = df['value'].reindex(common_time).interpolate()
+df['value_normalized'] = (df['value']-np.mean(df['value'].values))/np.std(df['value'].values)
+basal_interpolated = df['value_normalized'].reindex(common_time).interpolate()
 
 #create a dataframe with start and value columns 
 aligned_basal_df = pd.DataFrame({
@@ -213,12 +218,21 @@ final_P = np.array([
 ])
 
 # Initial state X
+"""
 X = np.array([
     [70],
     [np.mean(processed_basal_rate[650:])],
     [np.mean(processed_heart_rate[650:])],
     [np.mean(processed_respiratory[650:])],
 ])
+"""
+X = np.array([
+    [0],
+    [0],
+    [0],
+    [0]
+])
+
 
 # Process model matrix F, equivalent to A in math equations
 dt = 1  # 1 second time step
@@ -286,8 +300,9 @@ def initialize_kalman_filter(X, P, R, Q, F, H):
 
 omega_xy = np.pi/6
 omega_xw = np.pi/8
-omega = np.pi/6
-# Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
+omega = np.pi/100
+# Kalman filter loop: Predict and update steps
+
 def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
     F_rotation = rotation_matrix(omega)
@@ -344,6 +359,7 @@ np.savetxt("predictions_cbt.csv", xs_reshaped, delimiter=",")
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
 
+
 # Calculate Standard Deviation of Residuals and MSE
 residual_std = np.std(residuals, axis=0)
 mse = np.mean(residuals**2, axis=0)
@@ -377,3 +393,11 @@ plt.subplots_adjust(hspace=0.4)  # Increase the height space between plots
 plt.tight_layout()
 plt.savefig('my_plot_kal_rot_with_residuals.png')
 plt.show()
+cbt_mean = 98.6
+cbt_std = .61
+
+xs = xs_cbt*cbt_std + cbt_mean
+
+plt.plot(ys_cbt, xs)
+plt.savefig('my_plot_kal_rot2.png')
+
