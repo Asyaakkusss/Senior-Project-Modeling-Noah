@@ -110,6 +110,7 @@ end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
 #common_time = pd.date_range(start=df.index.min(), end=df.index.max(), freq='min')
 common_time = pd.date_range(start=start_time, end=end_time, freq='min')
 df['value_normalized'] = (df['value']-np.mean(df['value'].values))/np.std(df['value'].values)
+
 #align values with the times 
 respir_interpolated = df['value_normalized'].reindex(common_time).interpolate()
 
@@ -137,6 +138,7 @@ if df.index.duplicated().any():
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+df['value_normalized'] = (df['value']-np.mean(df['value'].values))/np.std(df['value'].values)
 df['value_normalized'] = (df['value']-np.mean(df['value'].values))/np.std(df['value'].values)
 #normalize them to a constant frequency 
 common_time = pd.date_range(start=start_time, 
@@ -359,6 +361,8 @@ np.savetxt("predictions_cbt.csv", xs_reshaped, delimiter=",")
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
 
+cbt_mean = 98.6
+cbt_std = .61
 
 # Calculate Standard Deviation of Residuals and MSE
 residual_std = np.std(residuals, axis=0)
@@ -400,4 +404,3 @@ xs = xs_cbt*cbt_std + cbt_mean
 
 plt.plot(ys_cbt, xs)
 plt.savefig('my_plot_kal_rot2.png')
-
