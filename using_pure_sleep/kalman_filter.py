@@ -7,24 +7,25 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
+from sklearn.preprocessing import LabelEncoder
 
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
-with open('data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
-sleep_analysis = np.array(column_data)
+sleep_analysis = np.array(column_data) 
 
 
-with open('data\PureSleepTime.csv', 'r') as file:
+with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_time = np.array(column_data)
 
-with open('data\BasalEnergyBurned.csv', 'r') as file:
+with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
@@ -37,17 +38,22 @@ def convert_to_integer(array):
 ST = convert_to_integer(sleep_time)
 BE = convert_to_integer(basal_energy)
 
+
+# =============================================================================================
+# ============================= DATA PROCESSING ===============================================
+# =============================================================================================
+
 # data processing for sleep time
-df = pd.read_csv("data/PureSleepTime.csv")
+df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
 
 # convert to datetime 
-df['start'] = pd.to_datetime(df['time'])
+df_st['start'] = pd.to_datetime(df_st['time'])
 
 #the datetime values will be used 
-df.set_index('start', inplace=True)
+df_st.set_index('start', inplace=True)
 
-if df.index.duplicated().any():
-    df = df[~df.index.duplicated(keep='first')]
+if df_st.index.duplicated().any():
+    df_st1 = df_st[~df_st.index.duplicated(keep='first')]
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
@@ -57,7 +63,7 @@ common_time = pd.date_range(start=start_time,
                             freq='min')
 
 #align values with the times 
-sleep_time_interpolated = df['value'].reindex(common_time).interpolate()
+sleep_time_interpolated = df_st['value'].reindex(common_time).interpolate()
 
 #create a dataframe with start and value columns 
 aligned_sleep_time_df = pd.DataFrame({
@@ -67,17 +73,40 @@ aligned_sleep_time_df = pd.DataFrame({
 processed_sleep_time = aligned_sleep_time_df.to_numpy().flatten()
 
 
-# data processing for sleep analysis 
-df = pd.read_csv("data/HKCategoryTypeIdentifierSleepAnalysis.csv")
+# ============================================================================================================================
+# ============================================================================================================================
 
+# data processing for sleep analysis 
+df_sa_original = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis.csv')
+
+# First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
+
+# Category mapping for the values in the csv
+category_mapping = {
+    "HKCategoryValueSleepAnalysisInBed": 1,
+    "HKCategoryValueSleepAnalysisAsleepREM": 2,
+    "HKCategoryValueSleepAnalysisAsleepDeep": 3,
+    "HKCategoryValueSleepAnalysisAsleepCore": 4,
+    "HKCategoryValueSleepAnalysisAwake": 5,
+    "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
+}
+
+# Map categories to numeric valuesby one hot encoding
+df_sa_original['onehot_encoded_value'] = df_sa_original['value'].map(category_mapping)
+df_sa_original.to_csv('data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv', index=False)  # save to new csv file
+
+# Now we can work with the date time 
+
+# Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
+df_sa = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv')
 # convert to datetime 
-df['start'] = pd.to_datetime(df['start'])
+df_sa['start'] = pd.to_datetime(df_sa['time'])
 
 #the datetime values will be used 
-df.set_index('start', inplace=True)
+df_st.set_index('start', inplace=True)
 
-if df.index.duplicated().any():
-    df = df[~df.index.duplicated(keep='first')]
+if df_st.index.duplicated().any():
+    df_st1 = df_st[~df_st.index.duplicated(keep='first')]
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
@@ -87,7 +116,34 @@ common_time = pd.date_range(start=start_time,
                             freq='min')
 
 #align values with the times 
-sleep_analysis_interpolated = df['value'].reindex(common_time).interpolate()
+sleep_time_interpolated = df_st['value'].reindex(common_time).interpolate()
+
+#create a dataframe with start and value columns 
+aligned_sleep_time_df = pd.DataFrame({
+    'value': sleep_time_interpolated
+})
+
+processed_sleep_time = aligned_sleep_time_df.to_numpy().flatten()
+
+'''
+# convert to datetime 
+df_sa['start'] = pd.to_datetime(df_sa['start'])
+
+#the datetime values will be used 
+df_sa.set_index('start', inplace=True)
+
+if df_sa.index.duplicated().any():
+    df_sa = df_sa[~df_sa.index.duplicated(keep='first')]
+
+start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+#normalize them to a constant frequency 
+common_time = pd.date_range(start=start_time, 
+                            end=end_time, 
+                            freq='min')
+
+#align values with the times 
+sleep_analysis_interpolated = df_sa['value'].reindex(common_time).interpolate()
 
 #create a dataframe with start and value columns 
 aligned_sleep_analysis_df = pd.DataFrame({
@@ -96,18 +152,19 @@ aligned_sleep_analysis_df = pd.DataFrame({
 
 processed_sleep_analysis = aligned_sleep_analysis_df.to_numpy().flatten()
 
+# ====================================================================================================================
 
 # data processing for basal metabolic rate 
-df = pd.read_csv("data/BasalEnergyBurned.csv")
+df_be = pd.read_csv("data/BasalEnergyBurned.csv")
 
 # convert to datetime 
-df['start'] = pd.to_datetime(df['start'])
+df_be['start'] = pd.to_datetime(df_be['start'])
 
 #the datetime values will be used 
-df.set_index('start', inplace=True)
+df_be.set_index('start', inplace=True)
 
-if df.index.duplicated().any():
-    df = df[~df.index.duplicated(keep='first')]
+if df_be.index.duplicated().any():
+    df_be = df_be[~df_be.index.duplicated(keep='first')]
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
@@ -117,7 +174,7 @@ common_time = pd.date_range(start=start_time,
                             freq='min')
 
 #align values with the times 
-basal_interpolated = df['value'].reindex(common_time).interpolate()
+basal_interpolated = df_be['value'].reindex(common_time).interpolate()
 
 #create a dataframe with start and value columns 
 aligned_basal_df = pd.DataFrame({
@@ -127,13 +184,13 @@ aligned_basal_df = pd.DataFrame({
 processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 
 
-# print(processed_basal_rate)
-print(processed_sleep_analysis)
-# print(processed_sleep_time)
+
+#print(processed_basal_rate)
+#print(processed_sleep_analysis)
+#print(processed_sleep_time)
 
 
 
-'''
 final_P = np.array([
     [7, 0,            0,            0         ],
     [0, 98.18160966, -34.72900601, -1.22780453],
