@@ -100,13 +100,13 @@ df_sa_original.to_csv('data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv'
 # Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
 df_sa = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv')
 # convert to datetime 
-df_sa['start'] = pd.to_datetime(df_sa['time'])
+df_sa['start'] = pd.to_datetime(df_sa['start'])
 
 #the datetime values will be used 
-df_st.set_index('start', inplace=True)
+df_sa.set_index('start', inplace=True)
 
-if df_st.index.duplicated().any():
-    df_st1 = df_st[~df_st.index.duplicated(keep='first')]
+if df_sa.index.duplicated().any():
+    df_sa = df_sa[~df_sa.index.duplicated(keep='first')]
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
@@ -116,14 +116,15 @@ common_time = pd.date_range(start=start_time,
                             freq='min')
 
 #align values with the times 
-sleep_time_interpolated = df_st['value'].reindex(common_time).interpolate()
+sleep_analysis_interpolated = df_sa['onehot_encoded_value'].reindex(common_time).interpolate()
 
 #create a dataframe with start and value columns 
-aligned_sleep_time_df = pd.DataFrame({
-    'value': sleep_time_interpolated
+aligned_sleep_analysis_df = pd.DataFrame({
+    'onehot_encoded_value': sleep_analysis_interpolated
 })
 
-processed_sleep_time = aligned_sleep_time_df.to_numpy().flatten()
+processed_sleep_analysis = aligned_sleep_analysis_df.to_numpy().flatten()
+print(processed_sleep_analysis)
 
 '''
 # convert to datetime 
