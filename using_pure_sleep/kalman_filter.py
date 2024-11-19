@@ -71,6 +71,8 @@ aligned_sleep_time_df = pd.DataFrame({
 })
 
 processed_sleep_time = aligned_sleep_time_df.to_numpy().flatten()
+all_nan_sleep_time = np.isnan(processed_sleep_time)
+sleep_time_sans_nan = processed_sleep_time[~all_nan_sleep_time]
 
 
 # ============================================================================================================================
@@ -124,34 +126,9 @@ aligned_sleep_analysis_df = pd.DataFrame({
 })
 
 processed_sleep_analysis = aligned_sleep_analysis_df.to_numpy().flatten()
-print(processed_sleep_analysis)
-
-'''
-# convert to datetime 
-df_sa['start'] = pd.to_datetime(df_sa['start'])
-
-#the datetime values will be used 
-df_sa.set_index('start', inplace=True)
-
-if df_sa.index.duplicated().any():
-    df_sa = df_sa[~df_sa.index.duplicated(keep='first')]
-
-start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
-#normalize them to a constant frequency 
-common_time = pd.date_range(start=start_time, 
-                            end=end_time, 
-                            freq='min')
-
-#align values with the times 
-sleep_analysis_interpolated = df_sa['value'].reindex(common_time).interpolate()
-
-#create a dataframe with start and value columns 
-aligned_sleep_analysis_df = pd.DataFrame({
-    'value': sleep_analysis_interpolated
-})
-
-processed_sleep_analysis = aligned_sleep_analysis_df.to_numpy().flatten()
+all_nan_sleep_analysis = np.isnan(processed_sleep_analysis)
+sleep_analysis_sans_nan = processed_sleep_analysis[~all_nan_sleep_analysis]
+# print(processed_sleep_analysis)
 
 # ====================================================================================================================
 
@@ -183,13 +160,68 @@ aligned_basal_df = pd.DataFrame({
 })
 
 processed_basal_rate = aligned_basal_df.to_numpy().flatten()
+all_nan_basal_rate = np.isnan(processed_basal_rate)
+basal_rate_sans_nan = processed_basal_rate[~all_nan_basal_rate]
+
+# =============================================================================================================
+
+# Currently, becuase the different data sets have different number of nans, the data sizes are different, 
+# So we use the minimum length of all the data and use that size for all the arrays of data
+
+# Ensuring consistent length of the arrays
+min_length = min(len(basal_rate_sans_nan), len(sleep_analysis_sans_nan), len(sleep_time_sans_nan))
+basal_rate_sans_nan = basal_rate_sans_nan[:min_length]
+sleep_analysis_sans_nan = sleep_analysis_sans_nan[:min_length]
+sleep_time_sans_nan = sleep_time_sans_nan[:min_length]
+
+# Convert to 1D arrays
+basal_rate_sans_nan = np.array(basal_rate_sans_nan).flatten()
+sleep_analysis_sans_nan = np.array(sleep_analysis_sans_nan).flatten()
+sleep_time_sans_nan = np.array(sleep_time_sans_nan).flatten()
+
+# It looks beautiful after this :)
 
 
-
+# =============================== DEBUGGING PURPOSES ================================
 #print(processed_basal_rate)
 #print(processed_sleep_analysis)
 #print(processed_sleep_time)
+#print(basal_rate_sans_nan, len(basal_rate_sans_nan))
+#print(sleep_time_sans_nan, len(sleep_time_sans_nan))
+#print(sleep_analysis_sans_nan, len(sleep_analysis_sans_nan))
 
+
+# =============================================================================================================
+# =============================================================================================================
+# =============================================================================================================
+# ============================================ We start working on the matrices ===============================
+
+# Creation of P matrix
+unified_array = np.array([basal_rate_sans_nan, sleep_analysis_sans_nan, sleep_time_sans_nan])
+P_threebythree = np.cov(unified_array)
+
+
+# Preprocess your data into arrays
+#basal_rate_data = np.array(processed_basal_rate[650:])
+#heart_rate_data = np.array(processed_sleep_time[650:])
+#respiratory_data = np.array(processed_sleep_analysis[650:])
+#time_vals = range(0, len(basal_rate_data))
+
+#print(P_threebythree) --- this is what it looks like right now
+# [[1.10624371e+02 1.61602628e-02 4.40134994e-02]
+# [1.61602628e-02 1.10291078e-02 1.27332509e-02]
+# [4.40134994e-02 1.27332509e-02 2.86459969e-02]]
+
+# Number of time steps based on the length of data being used
+n_steps = len(basal_rate_sans_nan)
+
+# Create zs matrix: (n_steps, 3) where each row corresponds to measurements at one time step
+zs = np.column_stack((basal_rate_sans_nan, sleep_analysis_sans_nan, sleep_time_sans_nan))
+
+
+# Define initial matrices (already provided by you)
+
+# Initial P matrix (state covariance matrix)
 
 
 final_P = np.array([
@@ -202,9 +234,9 @@ final_P = np.array([
 # Initial state X
 X = np.array([
     [97],
-    [np.mean(processed_basal_rate[650:])],
-    [np.mean(processed_heart_rate[650:])],
-    [np.mean(processed_respiratory[650:])],
+    [np.mean(basal_rate_sans_nan)],
+    [np.mean(sleep_analysis_sans_nan)],
+    [np.mean(sleep_time_sans_nan)],
 ]) 
 
 # Process model matrix F
@@ -215,6 +247,27 @@ F = np.array([
     [0, 0, 1, 0],
     [0, 0, 0, 1],
 ])
+
+# From ashley's branch --- implementation of rotation matrix
+def rotation_matrix(theta):
+    return np.array([[np.cos(theta), -np.sin(theta), 0, 0],
+                     [np.sin(theta),  np.cos(theta), 0, 0],
+                     [0,0,1,0],
+                     [0,0,0,1]])
+
+def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
+    """Returns a combined 4x4 rotation matrix for rotation in the xy-plane and xw-plane."""
+    R_xy = np.array([[np.cos(theta_xy), -np.sin(theta_xy), 0, 0],
+                     [np.sin(theta_xy), np.cos(theta_xy),  0, 0],
+                     [0, 0, 1, 0],
+                     [0, 0, 0, 1]])
+    
+    R_xw = np.array([[np.cos(theta_xw), 0, 0, -np.sin(theta_xw)],
+                     [0, 1, 0, 0],
+                     [0, 0, 1, 0],
+                     [np.sin(theta_xw), 0, 0, np.cos(theta_xw)]])
+    
+    return R_xy @ R_xw  # Combine the two rotations
 
 # Measurement noise covariance matrix R
 R = np.array([
