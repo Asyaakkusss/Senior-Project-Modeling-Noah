@@ -201,7 +201,7 @@ unified_array = np.array([basal_rate_sans_nan, sleep_analysis_sans_nan, sleep_ti
 P_threebythree = np.cov(unified_array)
 
 
-# Preprocess your data into arrays
+# Preprocess your data into arrays -- we don't need this anymore probs
 #basal_rate_data = np.array(processed_basal_rate[650:])
 #heart_rate_data = np.array(processed_sleep_time[650:])
 #respiratory_data = np.array(processed_sleep_analysis[650:])
@@ -222,6 +222,8 @@ zs = np.column_stack((basal_rate_sans_nan, sleep_analysis_sans_nan, sleep_time_s
 # Define initial matrices (already provided by you)
 
 # Initial P matrix (state covariance matrix)
+
+# =================================== this is where my understanding ends =========================================
 
 
 final_P = np.array([
@@ -369,6 +371,18 @@ plt.title("Kalman Filter State Estimates Over Time")
 plt.legend()
 plt.grid()
 plt.show()
+
+# Compare original and estimated values
+plt.figure(figsize=(10, 6))
+plt.plot(time_steps, zs[:, 0], label="Original Basal Rate", linestyle="dashed")
+plt.plot(time_steps, estimated_basal_rate, label="Estimated Basal Rate")
+plt.xlabel("Time Steps")
+plt.ylabel("Values")
+plt.title("Original vs Estimated Basal Rate")
+plt.legend()
+plt.grid()
+plt.show()
+
 
 
 
