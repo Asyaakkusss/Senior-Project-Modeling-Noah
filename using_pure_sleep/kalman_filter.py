@@ -288,8 +288,8 @@ Q_manual = np.array([
 # Measurement matrix H (maps state to measurement)
 H = np.array([
     [0, 1, 0, 0],  # basal rate mapping
-    [0, 0, 1, 0],  # heart rate mapping
-    [0, 0, 0, 1]   # respiratory rate mapping
+    [0, 0, 1, 0],  # should be sleep analysis mapping
+    [0, 0, 0, 1]   # should be sleep time mapping
 ])
 
 # Initialize Kalman filter
@@ -302,6 +302,78 @@ def initialize_kalman_filter(X, P, R, Q, F, H):
     kf.F = F
     kf.H = H
     return kf
+
+omega_xy = np.pi/6
+omega_xw = np.pi/8
+omega = np.pi/6
+# Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
+def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
+    kf = initialize_kalman_filter(X, P, R, Q, F, H)
+    F_rotation = rotation_matrix(omega)
+    kf_rot = initialize_kalman_filter(X, P, R, Q, F_rotation, H)
+    # Arrays to store state estimates and covariances
+    xs, cov = [], []
+    xs_rot = []
+    residuals = []
+    
+    for i in range(n_steps):
+        theta_xy = omega_xy * i * dt
+        theta_xw = omega_xw * i * dt
+        #kf_rot.F = rotation_matrix_4d_xy_xw(theta_xy, theta_xw)
+
+        kf.predict()  # Predict the next state
+        kf_rot.predict()
+        z = zs[i]     # Get the measurements for this time step
+        kf.update(z)  # Update with the measurement
+        kf_rot.update(z)
+
+        xs.append(kf.x)  # Store the state estimate
+        xs_rot.append(kf_rot.x)
+        cov.append(kf.P) # Store the covariance matrix
+
+        # Calculate residuals (difference between measurement and prediction)
+        predicted_measurement = H @ kf.x  # Predicted measurement
+        residual = z - predicted_measurement
+        residuals.append(residual)
+    
+    # Convert results to numpy arrays for easy handling
+    xs = np.array(xs)
+    cov = np.array(cov)
+    xs_rot = np.array(xs_rot)
+    residuals = np.array(residuals) 
+
+    return xs_rot, cov, residuals
+
+# Run the Kalman filter with your data
+xs, Ps, residuals = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
+
+# xs now contains state estimates, (including core body temperature estimates over time) --- what is this supposed to show now then? 
+print(type(xs))
+print(np.shape(xs))
+
+
+# Extract the estimated states
+time_steps = range(len(xs))
+estimated_basal_rate = xs[:, 0]  # State 1 (basal metabolic rate)
+estimated_sleep_analysis = xs[:, 1]  # State 2 (sleep analysis)
+estimated_sleep_time = xs[:, 2]  # State 3 (sleep time)
+
+# Plot state estimates
+plt.figure(figsize=(10, 6))
+plt.plot(time_steps, estimated_basal_rate, label="Estimated Basal Rate")
+plt.plot(time_steps, estimated_sleep_analysis, label="Estimated Sleep Analysis")
+plt.plot(time_steps, estimated_sleep_time, label="Estimated Sleep Time")
+plt.xlabel("Time Steps")
+plt.ylabel("State Estimates")
+plt.title("Kalman Filter State Estimates Over Time")
+plt.legend()
+plt.grid()
+plt.show()
+
+
+
+
+'''
 
 kf = initialize_kalman_filter(X, final_P, R, Q_manual, F, H)
 
