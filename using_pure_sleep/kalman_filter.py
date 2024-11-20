@@ -12,20 +12,22 @@ from sklearn.preprocessing import LabelEncoder
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
-with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+with open(r'/home/asyaakkus/Senior-Project-Modeling-Noah/data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+# with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_analysis = np.array(column_data) 
 
-
-with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
+with open(r'/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_time = np.array(column_data)
 
-with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
+with open(r'/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
@@ -44,7 +46,8 @@ BE = convert_to_integer(basal_energy)
 # =============================================================================================
 
 # data processing for sleep time
-df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
+df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
+#df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
 
 # convert to datetime 
 df_st['start'] = pd.to_datetime(df_st['time'])
