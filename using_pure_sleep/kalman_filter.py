@@ -204,17 +204,6 @@ unified_array = np.array([basal_rate_sans_nan, sleep_analysis_sans_nan, sleep_ti
 P_threebythree = np.cov(unified_array)
 
 
-# Preprocess your data into arrays -- we don't need this anymore probs
-#basal_rate_data = np.array(processed_basal_rate[650:])
-#heart_rate_data = np.array(processed_sleep_time[650:])
-#respiratory_data = np.array(processed_sleep_analysis[650:])
-#time_vals = range(0, len(basal_rate_data))
-
-#print(P_threebythree) --- this is what it looks like right now
-# [[1.10624371e+02 1.61602628e-02 4.40134994e-02]
-# [1.61602628e-02 1.10291078e-02 1.27332509e-02]
-# [4.40134994e-02 1.27332509e-02 2.86459969e-02]]
-
 # Number of time steps based on the length of data being used
 n_steps = len(basal_rate_sans_nan)
 
@@ -229,23 +218,28 @@ zs = np.column_stack((basal_rate_sans_nan, sleep_analysis_sans_nan, sleep_time_s
 # =================================== this is where my understanding ends =========================================
 
 
+#please note that the 0.16 for the total rhythm variance is currently just a placeholder. we need to figure out the average
+#variance of the sleeper from his data. For example, a sample when he falls asleep at 10:00 would be 22, at 6:00 AM would be 6, 
+#basically the variance based on military time. 
+#this P is taken from the P_threebythree array 
 final_P = np.array([
-    [7, 0,            0,            0         ],
-    [0, 98.18160966, -34.72900601, -1.22780453],
-    [0, -34.72900601, 470.32652132, 3.1424907],
-    [0, -1.22780453,  3.1424907,    3.33721444],
+    [0.16, 0,            0,            0         ],
+    [1.10624371e+02, 1.61602628e-02, 4.40134994e-02], 
+ [1.61602628e-02, 1.10291078e-02, 1.27332509e-02], 
+ [4.40134994e-02, 1.27332509e-02, 2.86459969e-02], 
 ])
 
-# Initial state X
+# Initial state X. based on the average of the arrays sans all the nans 
+#the hidden variable is initialized as 24 because this is the average length of a sleep-wake cycle 
 X = np.array([
-    [97],
+    [24],
     [np.mean(basal_rate_sans_nan)],
     [np.mean(sleep_analysis_sans_nan)],
     [np.mean(sleep_time_sans_nan)],
 ]) 
 
 # Process model matrix F
-dt = 1  # 1 second time step
+dt = 1  # 1 second time step as created by processing the data 
 F = np.array([
     [1, 0, dt, 0.5*dt**2],
     [0, 1, 0, dt],
@@ -373,6 +367,7 @@ plt.ylabel("State Estimates")
 plt.title("Kalman Filter State Estimates Over Time")
 plt.legend()
 plt.grid()
+plt.savefig('sleepfactors.png')
 plt.show()
 
 # Compare original and estimated values
