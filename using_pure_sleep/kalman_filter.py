@@ -224,9 +224,9 @@ zs = np.column_stack((basal_rate_sans_nan, sleep_analysis_sans_nan, sleep_time_s
 #this P is taken from the P_threebythree array 
 final_P = np.array([
     [0.16, 0,            0,            0         ],
-    [1.10624371e+02, 1.61602628e-02, 4.40134994e-02], 
- [1.61602628e-02, 1.10291078e-02, 1.27332509e-02], 
- [4.40134994e-02, 1.27332509e-02, 2.86459969e-02], 
+    [0, 1.10624371e+02, 1.61602628e-02, 4.40134994e-02], 
+ [0, 1.61602628e-02, 1.10291078e-02, 1.27332509e-02], 
+ [0, 4.40134994e-02, 1.27332509e-02, 2.86459969e-02], 
 ])
 
 # Initial state X. based on the average of the arrays sans all the nans 
