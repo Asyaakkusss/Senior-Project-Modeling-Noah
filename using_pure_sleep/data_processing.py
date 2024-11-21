@@ -13,7 +13,6 @@ from sklearn.preprocessing import LabelEncoder
 def process_numerical_data(csv_string, column_of_interest): 
     # data processing for sleep time
     dataframe = pd.read_csv(csv_string)
-    #df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
 
     # convert to datetime 
     dataframe['start'] = pd.to_datetime(dataframe[column_of_interest])
@@ -32,7 +31,7 @@ def process_numerical_data(csv_string, column_of_interest):
                                 freq='min')
 
     #align values with the times 
-    interpolated_data = df_st['value'].reindex(common_time).interpolate()
+    interpolated_data = dataframe['value'].reindex(common_time).interpolate()
 
     #create a dataframe with start and value columns 
     aligned_dataframe = pd.DataFrame({
@@ -58,3 +57,5 @@ def process_categorical_data(csv_string, column_of_interest, mapped_column, cate
     # Map categories to numeric valuesby one hot encoding
     df_sa_original[column_of_interest] = df_sa_original[mapped_column].map(category_mapping)
     df_sa_original.to_csv('data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv', index=False)  # save to new csv file
+
+
