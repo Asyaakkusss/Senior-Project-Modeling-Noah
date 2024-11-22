@@ -71,44 +71,44 @@ processed_respiratory = process_numerical_data(resp_rate_csv_string, col_interes
 processed_heart_rate = process_numerical_data(heart_rate_csv_string, col_interest)
 processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interest)
 
-#the three arrays are now different lengths, so we find the min value and crop all of them as needed 
+#the three arrays have null values, so we crop the nulls out to leave as much valid data as possible  
+processed_respiratory = processed_respiratory[612:]
+processed_heart_rate = processed_heart_rate[612:]
+processed_basal_rate = processed_basal_rate[612:]
+
+#thr three arrays are now different lengths, so we find the minimum length and cut off the maximum index of an array at that minimum length 
 min_length = min(len(processed_respiratory), len(processed_heart_rate), len(processed_basal_rate))
-processed_respiratory = processed_respiratory[:min_length]
-processed_heart_rate = processed_heart_rate[:min_length]
-processes_basal_rate = processed_basal_rate[:min_length]
 
 #create the index values for the p matrix by finding covariance between the three arrays 
+processed_basal_rate = processed_basal_rate[:min_length]
+processed_heart_rate = processed_heart_rate[:min_length]
+processed_respiratory = processed_respiratory[:min_length]
 unified_array = np.array([processed_basal_rate, processed_heart_rate, processed_respiratory])
 P_threebythree = np.cov(unified_array)
+print(P_threebythree)
 
-# Preprocess your data into arrays
-basal_rate_data = np.array(processed_basal_rate[650:])
-heart_rate_data = np.array(processed_heart_rate[650:])
-respiratory_data = np.array(processed_respiratory[650:])
-time_vals = range(0, len(basal_rate_data))
 
-#plt.figure(figsize=(8, 8))
-#plt.plot(time_vals, respiratory_data)
-#plt.show()
+time_vals = range(0, len(processed_basal_rate))
 
 # Number of time steps based on your data length
-n_steps = len(basal_rate_data)
+n_steps = len(processed_basal_rate)
 
 # Create zs matrix: (n_steps, 3) where each row corresponds to measurements at one time step
-zs = np.column_stack((basal_rate_data, heart_rate_data, respiratory_data))
+zs = np.column_stack((processed_basal_rate, processed_heart_rate, processed_respiratory))
 
 
 # Define initial matrices (already provided by you)
 
 # Initial P matrix (state covariance matrix)
-final_P = np.array([
-    [7, 0,            0,            0         ],
-    [0, 98.18160966, -34.72900601, -1.22780453],
-    [0, -34.72900601, 470.32652132, 3.1424907],
-    [0, -1.22780453,  3.1424907,    3.33721444],
-])
-
-# Initial state X
+P = np.array(
+    [
+        [7, 0,           0,            0            ], 
+        [0, 98.18381291, -18.10975158,  -1.2198942  ], 
+        [0, -18.10975158, 469.52988526,   3.03975667], 
+        [0, -1.2198942,    3.03975667,   3.33489696 ], 
+    ]
+)
+# Initial state X (based on means of X)
 X = np.array([
     [97],
     [np.mean(processed_basal_rate[650:])],
@@ -223,14 +223,14 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     return xs_rot, cov, residuals
 
 # Run the Kalman filter with your data
-xs, Ps, residuals = run_kalman_filter(X, final_P, R, Q_filterpy, F, H, zs, n_steps)
+xs, Ps, residuals = run_kalman_filter(X, P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
 print(np.shape(xs))
 
 
-xs_reshaped = xs.reshape(613230, 4)
+xs_reshaped = xs.reshape(2450620, 4)
 np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
 
 xs_cbt = xs_reshaped[:1440, 0]
