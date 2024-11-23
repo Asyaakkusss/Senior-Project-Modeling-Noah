@@ -57,3 +57,8 @@ def process_categorical_data(csv_string, column_of_interest, mapped_column, cate
     # Map categories to numeric valuesby one hot encoding
     df_sa_original[column_of_interest] = df_sa_original[mapped_column].map(category_mapping)
     df_sa_original.to_csv('data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv', index=False)  # save to new csv file
+
+def calc_R(arrays):     
+    unified_array = np.array(arrays)
+    R = np.cov(unified_array)
+    return R 

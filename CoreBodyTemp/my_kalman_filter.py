@@ -38,7 +38,7 @@ from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
 sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle")
-from data_processing import process_categorical_data, process_numerical_data
+from data_processing import process_categorical_data, process_numerical_data, calc_R
 
 
 #extract heart rate data 
@@ -83,9 +83,6 @@ min_length = min(len(processed_respiratory), len(processed_heart_rate), len(proc
 processed_basal_rate = processed_basal_rate[:min_length]
 processed_heart_rate = processed_heart_rate[:min_length]
 processed_respiratory = processed_respiratory[:min_length]
-unified_array = np.array([processed_basal_rate, processed_heart_rate, processed_respiratory])
-P_threebythree = np.cov(unified_array)
-print(P_threebythree)
 
 
 time_vals = range(0, len(processed_basal_rate))
@@ -105,14 +102,12 @@ just an initialization and so the filter will update the covariances as the mode
 The values were chosen based on the maximum reasonable numerical value for each as determined by a 
 literature search and observation of processed data arrays. 
 '''
-P = np.array(
-    [
+P = np.array([
         [102, 0, 0, 0], #CBT
         [0, 22, 0, 0], #BMR
         [0, 0, 160, 0], #HR
         [0, 0, 0, 16], #RR
-    ]
-)
+    ])
 # Initial state X (based on means of X)
 X = np.array([
     [97],
@@ -152,12 +147,9 @@ def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
     
     return R_xy @ R_xw  # Combine the two rotations
 
-# Measurement noise covariance matrix R
-R = np.array([
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1]
-])
+# Measurement noise covariance matrix R. Basically what we did for P before. Little goof 
+R = calc_R([processed_basal_rate, processed_heart_rate, processed_respiratory])
+print(R)
 
 # Two options for Q (process noise covariance)
 Q_filterpy = Q_discrete_white_noise(dim=4, dt=1., var=7)
