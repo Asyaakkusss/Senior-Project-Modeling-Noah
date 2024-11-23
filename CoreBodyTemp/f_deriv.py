@@ -72,8 +72,11 @@ Now, for the other two motherfuckers. There is an L shaped mf in the matrix on t
 we will tackle these first and figure out connections 
 '''
 
+#Subtract 100 to find crossings around y=97.5
+heart_rate_shifted = processed_heart_rate - 97.5
+
 # Find hundred-crossings (where the data crosses 100, or the middle of one oscillation)
-hundred_crossings = np.where(np.diff(np.sign(processed_heart_rate)))[100]
+hundred_crossings = np.where(np.diff(np.sign(heart_rate_shifted)))[0]
 
 # Number of oscillations is approximately half the zero-crossings
 num_oscillations = len(hundred_crossings) // 2
@@ -81,15 +84,24 @@ num_oscillations = len(hundred_crossings) // 2
 print("Estimated number of oscillations", num_oscillations)
 # Parameters for heart rate. we are forcing the fit bc what the fuck. 
 N = len(time) 
-f = 100
+f = 468
 t = time  
+#this is the estimated equation for heart rate 
 y = 62.5 * np.cos(2 * np.pi * f * t / N) + 112.5
 
+
+#pararmeters for basal metabolic rate
+N = len(time)
+f = 100
+t = time 
+#this is the estimate equation for heart rate 
+y_1 = np.abs(np.cos(2 * np.pi * f * t/N) + 12)
 # Plot the original and reconstructed signals
 plt.figure(figsize=(12, 6))
 plt.plot(time, processed_heart_rate, label="Heart Rate (Original)", alpha=0.7)
 plt.plot(time, processed_basal_rate, label="BMR (Original)", alpha=0.7)
 plt.plot(t, y, label="heart rate fit")
+plt.plot(t, y_1, label="BMR fit")
 plt.xlabel("Time")
 plt.ylabel("Value")
 plt.legend()
