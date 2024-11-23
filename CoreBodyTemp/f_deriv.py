@@ -89,13 +89,15 @@ t = time
 #this is the estimated equation for heart rate 
 y = 62.5 * np.cos(2 * np.pi * f * t / N) + 112.5
 
+zero_crossings = np.where(heart_rate_shifted == 0)
 
 #pararmeters for basal metabolic rate
 N = len(time)
-f = 100
+f = 368
 t = time 
+
 #this is the estimate equation for heart rate 
-y_1 = np.abs(np.cos(2 * np.pi * f * t/N) + 12)
+y_1 = np.abs(24 * np.sin(2 * np.pi * f * t/N))
 # Plot the original and reconstructed signals
 plt.figure(figsize=(12, 6))
 plt.plot(time, processed_heart_rate, label="Heart Rate (Original)", alpha=0.7)
