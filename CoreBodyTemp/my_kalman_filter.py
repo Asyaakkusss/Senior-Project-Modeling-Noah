@@ -100,12 +100,17 @@ zs = np.column_stack((processed_basal_rate, processed_heart_rate, processed_resp
 # Define initial matrices (already provided by you)
 
 # Initial P matrix (state covariance matrix)
+'''We set the covariances for the initial P to be 0 because the matrix has not converged yet. this is 
+just an initialization and so the filter will update the covariances as the model propagates over time. 
+The values were chosen based on the maximum reasonable numerical value for each as determined by a 
+literature search and observation of processed data arrays. 
+'''
 P = np.array(
     [
-        [7, 0,           0,            0            ], 
-        [0, 98.18381291, -18.10975158,  -1.2198942  ], 
-        [0, -18.10975158, 469.52988526,   3.03975667], 
-        [0, -1.2198942,    3.03975667,   3.33489696 ], 
+        [102, 0, 0, 0], #CBT
+        [0, 22, 0, 0], #BMR
+        [0, 0, 160, 0], #HR
+        [0, 0, 0, 16], #RR
     ]
 )
 # Initial state X (based on means of X)

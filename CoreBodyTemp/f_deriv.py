@@ -71,11 +71,14 @@ Now, for the other two motherfuckers. There is an L shaped mf in the matrix on t
 3. influence of HR on RR
 we will tackle these first and figure out connections 
 '''
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-from scipy.signal import savgol_filter
 
+# Find hundred-crossings (where the data crosses 100, or the middle of one oscillation)
+hundred_crossings = np.where(np.diff(np.sign(processed_heart_rate)))[100]
+
+# Number of oscillations is approximately half the zero-crossings
+num_oscillations = len(hundred_crossings) // 2
+
+print("Estimated number of oscillations", num_oscillations)
 # Parameters for heart rate. we are forcing the fit bc what the fuck. 
 N = len(time) 
 f = 100
