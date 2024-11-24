@@ -99,7 +99,17 @@ t_b= time
 #this is the estimate equation for heart rate 
 y_1 = np.abs(24 * np.sin(2 * np.pi * f_b * t_b/N_b))
 
-#parameters 
+respiratory_rate_shifted = processed_respiratory - 13.5 
+
+thirt_crossings = np.where(np.diff(np.sign(respiratory_rate_shifted)))[0]
+resp_osc = len(thirt_crossings) // 2
+print("estimated respirussy oscillations", resp_osc)
+#parameters for respiratory rate 
+N_r = len(time)
+f_r = 25
+t_r = time 
+
+y_2 = 4 * np.sin(2 * np.pi * f_r * t_r/N_r) + 12.5
 # Plot the original and reconstructed signals
 plt.figure(figsize=(12, 6))
 #plt.plot(time, processed_heart_rate, label="Heart Rate (Original)")
@@ -107,6 +117,7 @@ plt.figure(figsize=(12, 6))
 plt.plot(time, processed_respiratory, label="RR (Original)")
 #plt.plot(t_h, y, label="heart rate fit")
 #plt.plot(t_b, y_1, label="BMR fit")
+plt.plot(t_r, y_2, label="RR fit")
 plt.xlabel("Time")
 plt.ylabel("Value")
 plt.legend()
@@ -123,11 +134,12 @@ now...for finding the actual cells in the matrix.
 
 hr = 62.5 * np.cos(2 * np.pi * f_h * t_h / N_h) + 112.5
 bmr = np.abs(24 * np.sin(2 * np.pi * f_b * t_b/N_b))
+rr = 4 * np.sin(2 * np.pi * f_r * t_r/N_r) + 12.5
 
 #find gradient of each 
-
 hr_gradient = np.gradient(hr, time)
 bmr_gradient = np.gradient(bmr, time)
+rr_gradient = np.gradient (rr, time)
 
 #find derivative of heart rate w respect to BMR
 matrix_cell = np.mean(hr_gradient/bmr_gradient)
@@ -136,14 +148,14 @@ matrix_cell = np.mean(hr_gradient/bmr_gradient)
 matrix_cell_1 = np.mean(bmr_gradient/hr_gradient)
 print(matrix_cell)
 
+# find derivative of bmr w respect to rr and vice versa 
+matrix_cell_2 = np.mean(rr_gradient/bmr_gradient)
+matrix_cell_3 = np.mean(bmr_gradient/rr_gradient)
 
-matrix_cell_2
-matrix_cell_3
+# find derivative of hr w respect to rr and vice versa 
+matrix_cell_4 = np.mean(rr_gradient/hr_gradient)
+matrix_cell_5 = np.mean(hr_gradient/rr_gradient)
 
-matrix_cell_4
-matrix_cell_5
-
-matei
 
 #noah i love you pls figure out which cell is which. idk which one is hr w respect to bmr and which one is bm w respect to hr. as in cell (2, 3) vs (3, 2). 
 #non matlab order this is matlab slander. 
