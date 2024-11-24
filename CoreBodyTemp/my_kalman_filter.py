@@ -97,10 +97,14 @@ zs = np.column_stack((processed_basal_rate, processed_heart_rate, processed_resp
 # Define initial matrices (already provided by you)
 
 # Initial P matrix (state covariance matrix)
-'''We set the covariances for the initial P to be 0 because the matrix has not converged yet. this is 
-just an initialization and so the filter will update the covariances as the model propagates over time. 
-The values were chosen based on the maximum reasonable numerical value for each as determined by a 
-literature search and observation of processed data arrays. 
+'''
+1. link: https://dsp.stackexchange.com/questions/21796/question-about-q-matrix-model-process-covariance-in-kalman-filter
+    In general though your Q matrix will be full, not a diagonal, because there is correlation between the state variables. 
+    For example, suppose you are tracking position and velocity in x-axis for a car. Process noise (which Q is modelling) might
+    be things like wind, bumps in the road, and so on. If there is a change in velocity due to this noise, there will also be a 
+    change in position. They are correlated, and so the off-diagonal elements will be non-zero for those terms.
+
+2. Check the file 
 '''
 P = np.array([
         [102, 0, 0, 0], #CBT
@@ -151,7 +155,12 @@ def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
 R = calc_R([processed_basal_rate, processed_heart_rate, processed_respiratory])
 print(R)
 
-# Two options for Q (process noise covariance)
+# Initialize Q matrix (process noise covariance)
+'''We set the covariances for the initial Q to be 0 because the matrix has not converged yet. this is 
+just an initialization and so the filter will update the covariances as the model propagates over time. 
+The values were chosen based on the maximum reasonable numerical value for each as determined by a 
+literature search and observation of processed data arrays. 
+'''
 Q_filterpy = Q_discrete_white_noise(dim=4, dt=1., var=7)
 Q_manual = np.array([
     [0.7, 0, 0, 0],
