@@ -83,28 +83,81 @@ num_oscillations = len(hundred_crossings) // 2
 
 print("Estimated number of oscillations", num_oscillations)
 # Parameters for heart rate. we are forcing the fit bc what the fuck. 
-N = len(time) 
-f = 468
-t = time  
+N_h = len(time) 
+f_h = 468
+t_h = time  
 #this is the estimated equation for heart rate 
-y = 62.5 * np.cos(2 * np.pi * f * t / N) + 112.5
+y = 62.5 * np.cos(2 * np.pi * f_h * t_h / N_h) + 112.5
 
+zero_crossings = np.where(heart_rate_shifted == 0)
 
-#pararmeters for basal metabolic rate
-N = len(time)
-f = 100
-t = time 
+#parameters for basal metabolic rate
+N_b= len(time)
+f_b = 368
+t_b= time 
+
 #this is the estimate equation for heart rate 
-y_1 = np.abs(np.cos(2 * np.pi * f * t/N) + 12)
+y_1 = np.abs(24 * np.sin(2 * np.pi * f_b * t_b/N_b))
+
+respiratory_rate_shifted = processed_respiratory - 13.5 
+
+thirt_crossings = np.where(np.diff(np.sign(respiratory_rate_shifted)))[0]
+resp_osc = len(thirt_crossings) // 2
+print("estimated respirussy oscillations", resp_osc)
+#parameters for respiratory rate 
+N_r = len(time)
+f_r = 25
+t_r = time 
+
+y_2 = 4 * np.sin(2 * np.pi * f_r * t_r/N_r) + 12.5
 # Plot the original and reconstructed signals
 plt.figure(figsize=(12, 6))
-plt.plot(time, processed_heart_rate, label="Heart Rate (Original)", alpha=0.7)
-plt.plot(time, processed_basal_rate, label="BMR (Original)", alpha=0.7)
-plt.plot(t, y, label="heart rate fit")
-plt.plot(t, y_1, label="BMR fit")
+#plt.plot(time, processed_heart_rate, label="Heart Rate (Original)")
+#plt.plot(time, processed_basal_rate, label="BMR (Original)")
+plt.plot(time, processed_respiratory, label="RR (Original)")
+#plt.plot(t_h, y, label="heart rate fit")
+#plt.plot(t_b, y_1, label="BMR fit")
+plt.plot(t_r, y_2, label="RR fit")
 plt.xlabel("Time")
 plt.ylabel("Value")
 plt.legend()
 plt.grid(True)
 plt.title("Original vs. Reconstructed Signals")
 plt.savefig("correlation.png")
+
+
+'''
+now...for finding the actual cells in the matrix.
+'''
+
+#influence of HR w respect to BMR...aka the second row and fourth column. derivatives. 
+
+hr = 62.5 * np.cos(2 * np.pi * f_h * t_h / N_h) + 112.5
+bmr = np.abs(24 * np.sin(2 * np.pi * f_b * t_b/N_b))
+rr = 4 * np.sin(2 * np.pi * f_r * t_r/N_r) + 12.5
+
+#find gradient of each 
+hr_gradient = np.gradient(hr, time)
+bmr_gradient = np.gradient(bmr, time)
+rr_gradient = np.gradient (rr, time)
+
+#find derivative of heart rate w respect to BMR
+matrix_cell = np.mean(hr_gradient/bmr_gradient)
+
+#find derivative of BMR w respect to HR
+matrix_cell_1 = np.mean(bmr_gradient/hr_gradient)
+print(matrix_cell)
+
+# find derivative of bmr w respect to rr and vice versa 
+matrix_cell_2 = np.mean(rr_gradient/bmr_gradient)
+matrix_cell_3 = np.mean(bmr_gradient/rr_gradient)
+
+# find derivative of hr w respect to rr and vice versa 
+matrix_cell_4 = np.mean(rr_gradient/hr_gradient)
+matrix_cell_5 = np.mean(hr_gradient/rr_gradient)
+
+
+#noah i love you pls figure out which cell is which. idk which one is hr w respect to bmr and which one is bm w respect to hr. as in cell (2, 3) vs (3, 2). 
+#non matlab order this is matlab slander. 
+# i have made the decision to make the 1-3 of the first row and columns zero becuase we simply are just girls and don't know (fairy and sparkle emojis)
+#just slap dt in front of the constants I have produced. its not much but it is honest work 
