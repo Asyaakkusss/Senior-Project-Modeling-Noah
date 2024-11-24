@@ -1,0 +1,54 @@
+---
+title: "EDA_Hunger"
+author: "Ashley Sah"
+date: "2024-11-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+physical_effort_data <- read.csv("/Users/monugoel/Desktop/CSDS_395/data/PhysicalEffort.csv")
+
+physical_effort_data$start <- as.POSIXct(physical_effort_data$start, format = "%Y-%m-%d %H:%M:%S %z")
+
+basal_energy_data <- read.csv("/Users/monugoel/Desktop/CSDS_395/data/BasalEnergyBurned.csv")
+basal_energy_data$start <- as.POSIXct(basal_energy_data$start, format = "%Y-%m-%d %H:%M:%S %z")
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+physical_effort_data %>% 
+  filter(start >= as.POSIXct("2024-09-17") & start < as.POSIXct("2024-09-18")) %>%
+  ggplot(aes(x=start, y = value)) +
+  geom_line()+
+  geom_point() +
+  geom_vline(xintercept = as.POSIXct(c("2024-09-17 09:00", "2024-09-17 13:00", "2024-09-17 16:00")), 
+             linetype="dashed", color = "red")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+basal_energy_data %>% 
+  filter(start >= as.POSIXct("2024-09-17") & start < as.POSIXct("2024-09-18")) %>%
+  ggplot(aes(x=start, y = value)) +
+  geom_line()+
+  geom_point()+
+  geom_vline(xintercept = as.POSIXct(c("2024-09-17 09:00", "2024-09-17 13:00", "2024-09-17 16:00")), 
+             linetype="dashed", color = "red")
+```
+
