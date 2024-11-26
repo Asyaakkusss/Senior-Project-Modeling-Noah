@@ -279,7 +279,6 @@ print("printing shape of xs", np.shape(xs))
 
 
 xs_reshaped = xs.reshape(612655, 4)
-np.savetxt(os.path.join( "data/predictions_cbt.csv"), xs_reshaped, delimiter=",")
 
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
