@@ -8,7 +8,7 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
-sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle")
+sys.path.append("./SleepCycle")
 from data_processing import process_categorical_data, process_numerical_data
 from scipy.optimize import curve_fit
 
@@ -111,6 +111,7 @@ t_r = time
 
 y_2 = 4 * np.sin(2 * np.pi * f_r * t_r/N_r) + 12.5
 # Plot the original and reconstructed signals
+'''
 plt.figure(figsize=(12, 6))
 #plt.plot(time, processed_heart_rate, label="Heart Rate (Original)")
 #plt.plot(time, processed_basal_rate, label="BMR (Original)")
@@ -126,7 +127,7 @@ plt.title("Original vs. Reconstructed Signals")
 plt.savefig("correlation.png")
 
 
-'''
+
 now...for finding the actual cells in the matrix.
 '''
 
@@ -146,7 +147,7 @@ matrix_cell = np.mean(hr_gradient/bmr_gradient)
 
 #find derivative of BMR w respect to HR
 matrix_cell_1 = np.mean(bmr_gradient/hr_gradient)
-print(matrix_cell)
+#print(matrix_cell)
 
 # find derivative of bmr w respect to rr and vice versa 
 matrix_cell_2 = np.mean(rr_gradient/bmr_gradient)
