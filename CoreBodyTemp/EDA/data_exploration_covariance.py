@@ -38,5 +38,6 @@ plt.title('Correlation Matrix')
 plt.show()
 
 print(covariance_matrix)
+print(correlation_matrix)
 
 
