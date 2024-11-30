@@ -37,9 +37,8 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
-sys.path.append("./SleepCycle")
+sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle")
 from data_processing import process_categorical_data, process_numerical_data, calc_R
-from f_deriv import matrix_cell, matrix_cell_1, matrix_cell_2, matrix_cell_3, matrix_cell_4, matrix_cell_5
 
 
 #extract heart rate data 
@@ -86,8 +85,6 @@ processed_heart_rate = processed_heart_rate[:min_length]
 processed_respiratory = processed_respiratory[:min_length]
 
 
-
-
 time_vals = range(0, len(processed_basal_rate))
 
 # Number of time steps based on your data length
@@ -97,19 +94,18 @@ n_steps = len(processed_basal_rate)
 zs = np.column_stack((processed_basal_rate, processed_heart_rate, processed_respiratory))
 
 
-# Define initial matrices 
+# Define initial matrices (already provided by you)
 
 # Initial P matrix (state covariance matrix)
-'''
-We set the covariances for the initial P to be 0 because the matrix has not converged yet. this is 
+'''We set the covariances for the initial P to be 0 because the matrix has not converged yet. this is 
 just an initialization and so the filter will update the covariances as the model propagates over time. 
 The values were chosen based on the maximum reasonable numerical value for each as determined by a 
-literature search and observation of processed data arrays. '''
-
+literature search and observation of processed data arrays. 
+'''
 P = np.array([
-        [110, 0, 0, 0], #CBT
-        [0, 100, 0, 0], #BMR
-        [0, 0, 200, 0], #HR
+        [102, 0, 0, 0], #CBT
+        [0, 22, 0, 0], #BMR
+        [0, 0, 160, 0], #HR
         [0, 0, 0, 16], #RR
     ])
 # Initial state X (based on means of X)
@@ -122,23 +118,20 @@ X = np.array([
 
 # Process model matrix F, equivalent to A in math equations
 dt = 1  # 1 second time step
-# See f_derive.py in CoreBodyTemp folder to see how f has been derived
 
-F = np.array ([
-    [1, 0, 0, 0],
-    [0, 1, matrix_cell, matrix_cell_2],
-    [0, matrix_cell_1/60, 1, matrix_cell_4/60],
-    [0, matrix_cell_3/60, matrix_cell_5/60, 1]
-])
-
-'''
 
 F = np.array([
-    [1, 0, dt, 0.5*dt**2],
-    [0, 1, 0, dt],
-    [0, 0, 1, 0],
-    [0, 0, 0, 1],
-]) '''
+    [1, 0, 0, 0],
+    [0, 1, 3.31*np.cos(dt), 0.0001437*np.cos(dt)**2],
+    [0, 0.276, 1, -2.713e-6*np.cos(dt)],
+    [0, 1.835e-8, -6.9652e-10, 1],
+])
+
+def make_F(theta):
+    return np.array([[1, np.cos(theta), 0, 0],
+    [0, -np.sin(theta), 3.31*np.cos(theta), 0.0001437*np.cos(theta)**2],
+    [0, 0.276, 1, -2.713e-6*np.cos(theta)],
+    [0, 1.835e-8, -6.9652e-10, 1]])
 
 def rotation_matrix(theta):
     return np.array([[np.cos(theta), -np.sin(theta), 0, 0],
@@ -161,61 +154,23 @@ def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
     return R_xy @ R_xw  # Combine the two rotations
 
 # Measurement noise covariance matrix R. Basically what we did for P before. Little goof 
-#R = calc_R([processed_basal_rate, processed_heart_rate, processed_respiratory])
-#print(R)
+R = calc_R([processed_basal_rate, processed_heart_rate, processed_respiratory])
+print(R)
 
-# Calculating the variance for each dataset here
-# Variance for BMR
-bmr_variance = processed_basal_rate.var()
-# Variance for HR
-hr_variance = processed_heart_rate.var()
-# Variance for RR
-rr_variance = processed_respiratory.var()
-
-R = ([
-     [bmr_variance/60**2, 0, 0],
-     [0, hr_variance/60**2, 0 ],
-     [0, 0, rr_variance/60**2]
- ])
-
-# Initialize Q matrix (process noise covariance)
-'''
-1. link: https://dsp.stackexchange.com/questions/21796/question-about-q-matrix-model-process-covariance-in-kalman-filter
-    In general though your Q matrix will be full, not a diagonal, because there is correlation between the state variables. 
-    For example, suppose you are tracking position and velocity in x-axis for a car. Process noise (which Q is modelling) might
-    be things like wind, bumps in the road, and so on. If there is a change in velocity due to this noise, there will also be a 
-    change in position. They are correlated, and so the off-diagonal elements will be non-zero for those terms.
-
-2. Check the file CoreBodyTemp/EDA/data_exploration_covariance.py
-    Just verifying that the rho (non diagonal values) are 0. According to the heat map geenrated, rho=0.
-    Now we find the variance in each dataset and add it the diagonal of the Q matrix. 
-
-'''
-
-# ============= DEBUGGING PURPOSES =================
-# print(hr_variance, rr_variance, bmr_variance)
-# 469.5291188717833 3.334891515419769 98.18365264679386
-
-Q = np.array([
-    [0.5, 0, 0, 0],             #CBT -- according to the NIH, "Among normal individuals, mean daily temperature can differ by 0.5°C (0.9°F), and daily variations can be as much as 0.25 to 0.5°C.
-    [0, 0.2, 0, 0],                #BMR
-    [0, 0, 0.3, 0],    #HR
-    [0, 0, 0, 0.2],     #RR#
+# Two options for Q (process noise covariance)
+Q_filterpy = Q_discrete_white_noise(dim=4, dt=1., var=7)
+Q_manual = np.array([
+    [0.5, 0, 0, 0],
+    [0, 0.2, 0, 0],
+    [0, 0, 0.3, 0],
+    [0, 0, 0, 0.2],
 ])
-'''
-Q = np.array([
-    [0.7, 0, 0, 0],
-    [0, 9.818160966, 0, 0],
-    [0, 0, 47.032652132, 0],
-    [0, 0, 0, 0.333721444],
-]) 
-'''
 
 # Measurement matrix H (maps state to measurement)
 H = np.array([
     [0, 1, 0, 0],  # basal rate mapping
-    [0, 0, 1/60, 0],  # heart rate mapping
-    [0, 0, 0, 1/60]   # respiratory rate mapping
+    [0, 0, 1, 0],  # heart rate mapping
+    [0, 0, 0, 1]   # respiratory rate mapping
 ])
 
 # Kalman filter initialization
@@ -235,7 +190,7 @@ omega = np.pi/6
 # Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
 def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
-    F_rotation = rotation_matrix(omega)
+    F_rotation = make_F(omega)
     kf_rot = initialize_kalman_filter(X, P, R, Q, F_rotation, H)
     # Arrays to store state estimates and covariances
     xs, cov = [], []
@@ -258,57 +213,58 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
         cov.append(kf.P) # Store the covariance matrix
 
         # Calculate residuals (difference between measurement and prediction)
-        #predicted_measurement = H @ kf.x  # Predicted measurement
-        #residual = z - predicted_measurement
-        #residuals.append(residual)
+        predicted_measurement = H @ kf.x  # Predicted measurement
+        residual = z - predicted_measurement
+        residuals.append(residual)
     
     # Convert results to numpy arrays for easy handling
     xs = np.array(xs)
     cov = np.array(cov)
     xs_rot = np.array(xs_rot)
-    #residuals = np.array(residuals) 
+    residuals = np.array(residuals) 
 
-    return xs_rot, cov #residuals
+    return xs_rot, cov, residuals
 
 # Run the Kalman filter with your data
-xs, Ps = run_kalman_filter(X, P, R, Q, F, H, zs, n_steps)
+xs, Ps, residuals = run_kalman_filter(X, P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
-print("printing shape of xs", np.shape(xs))
+print(np.shape(xs))
 
 
 xs_reshaped = xs.reshape(612655, 4)
+np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
 
 xs_cbt = xs_reshaped[:1440, 0]
 ys_cbt = np.arange(len(xs_cbt))
 
 # Calculate Standard Deviation of Residuals and MSE
-#residual_std = np.std(residuals, axis=0)
-#mse = np.mean(residuals**2, axis=0)
+residual_std = np.std(residuals, axis=0)
+mse = np.mean(residuals**2, axis=0)
 
-#residual_std_cbt = residual_std[:, 0]  # Extract standard deviation for CBT
-#mse_cbt = mse[:, 0]  # Extract MSE for CBT
+residual_std_cbt = residual_std[:, 0]  # Extract standard deviation for CBT
+mse_cbt = mse[:, 0]  # Extract MSE for CBT
 
-#print("Standard Deviation of Residuals:", residual_std_cbt)
-#print("Mean Squared Error (MSE):", mse_cbt)
+print("Standard Deviation of Residuals:", residual_std_cbt)
+print("Mean Squared Error (MSE):", mse_cbt)
 
 plt.plot(ys_cbt, xs_cbt, label='Predicted CBT')
 plt.title('Predicted Core Body Temperature over Time')
 plt.xlabel('Time Steps')
 plt.ylabel('CBT Estimate')
 plt.legend()
-
+'''
 # Plot Residuals
-#plt.subplot(2, 1, 2)  # Second plot in the grid
-#plt.plot(ys_cbt, residuals[:len(ys_cbt), 0], label='Residuals (CBT)')
-#plt.title('Residuals of Core Body Temperature Over Time')
-#plt.xlabel('Time Steps')
-#plt.ylabel('Residual (Measurement - Prediction)')
-#plt.legend()
-
+plt.subplot(2, 1, 2)  # Second plot in the grid
+plt.plot(ys_cbt, residuals[:len(ys_cbt), 0], label='Residuals (CBT)')
+plt.title('Residuals of Core Body Temperature Over Time')
+plt.xlabel('Time Steps')
+plt.ylabel('Residual (Measurement - Prediction)')
+plt.legend()
+'''
 
 # Show the final plot with both graphs
 plt.tight_layout()
-plt.savefig('my_plot_kal_rot_1.png')
+plt.savefig('my_plot_kal_rot_with_residuals.png')
 plt.show()
