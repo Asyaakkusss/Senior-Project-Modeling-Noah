@@ -123,15 +123,15 @@ dt = 1  # 1 second time step
 F = np.array([
     [1, 0, 0, 0],
     [0, 1, 3.31*np.cos(dt), 0.0001437*np.cos(dt)**2],
-    [0, 0.276, 1, -2.713e-6*np.cos(dt)],
+    [0, 0.276*np.cos(dt), 1, -2.713e-6*np.cos(dt)],
     [0, 1.835e-8, -6.9652e-10, 1],
 ])
 
 def make_F(theta):
-    return np.array([[1, np.cos(theta), 0, 0],
+    return np.array([[1, 0, 0, 0],
     [0, -np.sin(theta), 3.31*np.cos(theta), 0.0001437*np.cos(theta)**2],
-    [0, 0.276, 1, -2.713e-6*np.cos(theta)],
-    [0, 1.835e-8, -6.9652e-10, 1]])
+    [0, 0.276*np.sin(theta), 1, -2.713e-6*np.cos(theta)],
+    [0, 1.835e-8*np.cos(theta), -6.9652e-10*np.cos(theta), 1]])
 
 def rotation_matrix(theta):
     return np.array([[np.cos(theta), -np.sin(theta), 0, 0],
