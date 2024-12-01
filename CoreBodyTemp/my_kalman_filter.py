@@ -37,12 +37,12 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
-sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle")
+sys.path.append("../SleepCycle")
 from data_processing import process_categorical_data, process_numerical_data, calc_R
 
 
 #extract heart rate data 
-home_dir = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/"
+home_dir = "F:/FALL 2024/Senior-Project-Modeling-Noah/data"
 
 '''
 we find the P matrix by taking the variance of each of the arrays at consistent time stamps. for now, we will just focus on 
@@ -63,9 +63,9 @@ RR last timestamp:  [Timestamp('2024-09-05 08:27:27-0400', tz='UTC-04:00') 11.0]
 
 '''
 #preprocess the data 
-resp_rate_csv_string = "data/RespiratoryRate.csv"
-heart_rate_csv_string = "data/HeartRate.csv"
-basal_rate_csv_string = "data/BasalEnergyBurned.csv"
+resp_rate_csv_string = "F:/FALL 2024/Senior-Project-Modeling-Noah/data/RespiratoryRate.csv"
+heart_rate_csv_string = "F:/FALL 2024/Senior-Project-Modeling-Noah/data/HeartRate.csv"
+basal_rate_csv_string = "F:/FALL 2024/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
 col_interest = 'start'
 processed_respiratory = process_numerical_data(resp_rate_csv_string, col_interest)
 processed_heart_rate = process_numerical_data(heart_rate_csv_string, col_interest)
@@ -157,6 +157,15 @@ def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
 R = calc_R([processed_basal_rate, processed_heart_rate, processed_respiratory])
 print(R)
 
+# finding variance for R
+
+'''
+var_bmr = processed_basal_rate.var()
+var_rr = processed_respiratory.var()
+var_hr = processed_heart_rate.var()
+
+R = np.diag([var_bmr, var_hr, var_rr])'''
+
 # Two options for Q (process noise covariance)
 Q_filterpy = Q_discrete_white_noise(dim=4, dt=1., var=7)
 Q_manual = np.array([
@@ -190,8 +199,8 @@ omega = np.pi/6
 # Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
 def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
-    F_rotation = make_F(omega)
-    kf_rot = initialize_kalman_filter(X, P, R, Q, F_rotation, H)
+    #F_rotation = make_F(omega)
+    #kf_rot = initialize_kalman_filter(X, P, R, Q, F_rotation, H)
     # Arrays to store state estimates and covariances
     xs, cov = [], []
     xs_rot = []
@@ -203,13 +212,13 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
         #kf_rot.F = rotation_matrix_4d_xy_xw(theta_xy, theta_xw)
 
         kf.predict()  # Predict the next state
-        kf_rot.predict()
+        #kf_rot.predict()
         z = zs[i]     # Get the measurements for this time step
         kf.update(z)  # Update with the measurement
-        kf_rot.update(z)
+        #kf_rot.update(z)
 
         xs.append(kf.x)  # Store the state estimate
-        xs_rot.append(kf_rot.x)
+        #xs_rot.append(kf_rot.x)
         cov.append(kf.P) # Store the covariance matrix
 
         # Calculate residuals (difference between measurement and prediction)
@@ -220,13 +229,13 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     # Convert results to numpy arrays for easy handling
     xs = np.array(xs)
     cov = np.array(cov)
-    xs_rot = np.array(xs_rot)
+    #xs_rot = np.array(xs_rot)
     residuals = np.array(residuals) 
 
-    return xs_rot, cov, residuals
+    return xs, cov, residuals
 
 # Run the Kalman filter with your data
-xs, Ps, residuals = run_kalman_filter(X, P, R, Q_filterpy, F, H, zs, n_steps)
+xs, Ps, residuals = run_kalman_filter(X, P, R, Q_manual, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
@@ -266,5 +275,5 @@ plt.legend()
 
 # Show the final plot with both graphs
 plt.tight_layout()
-plt.savefig('my_plot_kal_rot_with_residuals.png')
+plt.savefig('my_plot_kal_with_residuals.png')
 plt.show()
