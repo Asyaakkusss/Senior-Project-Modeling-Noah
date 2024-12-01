@@ -68,7 +68,7 @@ F = np.array([
 def make_F(theta):
     return np.array([[1, 0, 0],
                      [0, 1, 0.167489*np.cos(theta)],
-                     [-theta**2, -1.52003*np.sin(theta), 1],
+                     [np.cos(theta**2), -1.52003*np.sin(theta), 1],
     ])
 
 # Measurement noise covariance matrix R. Basically what we did for P before. Little goof 
@@ -142,7 +142,7 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     return xs_rot, cov, residuals
 
 # Run the Kalman filter with your data
-xs, Ps, residuals = run_kalman_filter(X, P, R, Q_manual, F, H, zs, n_steps)
+xs, Ps, residuals = run_kalman_filter(X, P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
