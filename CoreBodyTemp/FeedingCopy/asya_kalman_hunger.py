@@ -43,7 +43,7 @@ n_steps = len(processed_basal_rate)
 zs = np.column_stack((processed_basal_rate, processed_phys_rate))
 
 P = np.array([
-        [102, 0, 0], #hunger cycle 
+        [1, 0, 0], #hunger cycle 
         [0, 22, 0], #BMR
         [0, 0, 12.5], #PE
     ])
