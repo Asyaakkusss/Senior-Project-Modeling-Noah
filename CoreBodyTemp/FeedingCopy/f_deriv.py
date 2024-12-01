@@ -79,30 +79,20 @@ plt.savefig("correlation_sleep.png")
 
 #influence of HR w respect to BMR...aka the second row and fourth column. derivatives. 
 
-hr = 62.5 * np.cos(2 * np.pi * f_h * t_h / N_h) + 112.5
+pe = 5.5 * np.cos(2 * np.pi * f_h * t_h / N_h) + 7
 bmr = np.abs(24 * np.sin(2 * np.pi * f_b * t_b/N_b))
 
 #find gradient of each 
-hr_gradient = np.gradient(hr, time)
+pe_gradient = np.gradient(pe, time)
 bmr_gradient = np.gradient(bmr, time)
-rr_gradient = np.gradient (rr, time)
 
-#find derivative of heart rate w respect to BMR
-matrix_cell = np.mean(hr_gradient/bmr_gradient)
+#find derivative of pe w respect to BMR
+matrix_cell = np.mean(pe_gradient/bmr_gradient)
 
-#find derivative of BMR w respect to HR
-matrix_cell_1 = np.mean(bmr_gradient/hr_gradient)
-#print(matrix_cell)
-
-# find derivative of bmr w respect to rr and vice versa 
-matrix_cell_2 = np.mean(rr_gradient/bmr_gradient)
-matrix_cell_3 = np.mean(bmr_gradient/rr_gradient)
-
-# find derivative of hr w respect to rr and vice versa 
-matrix_cell_4 = np.mean(rr_gradient/hr_gradient)
-matrix_cell_5 = np.mean(hr_gradient/rr_gradient)
-
-
+#find derivative of BMR w respect to pe
+matrix_cell_1 = np.mean(bmr_gradient/pe_gradient)
+print("pe w respect to BMR", matrix_cell)
+print("BMR w respect pe", matrix_cell_1)
 #noah i love you pls figure out which cell is which. idk which one is hr w respect to bmr and which one is bm w respect to hr. as in cell (2, 3) vs (3, 2). 
 #non matlab order this is matlab slander. 
 # i have made the decision to make the 1-3 of the first row and columns zero becuase we simply are just girls and don't know (fairy and sparkle emojis)

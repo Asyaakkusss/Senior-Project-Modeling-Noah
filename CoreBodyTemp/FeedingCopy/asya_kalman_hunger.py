@@ -25,6 +25,7 @@ processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interes
 #the three arrays have null values, so we crop the nulls out to leave as much valid data as possible  
 processed_phys_rate = processed_phys_rate[612:]
 processed_basal_rate = processed_basal_rate[612:]
+print (processed_phys_rate)
 
 #thr three arrays are now different lengths, so we find the minimum length and cut off the maximum index of an array at that minimum length 
 min_length = min(len(processed_phys_rate), len(processed_basal_rate))
@@ -59,15 +60,15 @@ dt = 1  # 1 second time step
 
 
 F = np.array([
-    [1, dt, 0.5*dt**2],
-    [0, 1, dt],
-    [0, 0, 1],
+    [1, 0, 0],
+    [0, 1, 0.167489*np.cos(dt)],
+    [0, -1.52003*np.cos(dt), 1],
 ])
 
 def make_F(theta):
     return np.array([[1, 0, 0],
-                     [0, -np.sin(theta), 3.31*np.cos(theta)],
-                     [0, 0.276*np.sin(theta), 1],
+                     [0, 1, 0.167489*np.cos(theta)],
+                     [-theta**2, -1.52003*np.sin(theta), 1],
     ])
 
 # Measurement noise covariance matrix R. Basically what we did for P before. Little goof 
