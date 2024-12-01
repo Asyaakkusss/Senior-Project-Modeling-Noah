@@ -1,32 +1,3 @@
-'''
-Im going to need a state vector like so: [CBT HR ST]
-
-we need parameters describing how skin temp and heart rate impact core body temp 
-
-Process model: 
-A = 
-[1 alpha beta]
-[0 1     0]
-[0 0     1]
-
-x_t+1 = A*xt + w_t
-
-Measurement model: H matrix with heart rate and skin temperature from state vector 
-
-H = [0 1 0]
-    [0 0 1]
-
-Q covariance (for process model): process noise 
-[Q_CBT 0 0]
-[0 Q_HR 0]
-[0 0 Q_ST]
-
-R covariance (for measurement model): variances for heart rate and skin temp 
-R = [R_HR 0]
-    [0 R_ST]
-
-
-'''
 import numpy as np 
 import csv 
 import matplotlib.pyplot as plt 
@@ -123,35 +94,15 @@ dt = 1  # 1 second time step
 F = np.array([
     [1, 0, 0, 0],
     [0, 1, 3.31*np.cos(dt), 0.0001437*np.cos(dt)**2],
-    [0, 0.276, 1, -2.713e-6*np.cos(dt)],
+    [0, 0.276*np.cos(dt), 1, -2.713e-6*np.cos(dt)],
     [0, 1.835e-8, -6.9652e-10, 1],
 ])
 
 def make_F(theta):
-    return np.array([[1, np.cos(theta), 0, 0],
+    return np.array([[1, 0, 0, 0],
     [0, -np.sin(theta), 3.31*np.cos(theta), 0.0001437*np.cos(theta)**2],
-    [0, 0.276, 1, -2.713e-6*np.cos(theta)],
-    [0, 1.835e-8, -6.9652e-10, 1]])
-
-def rotation_matrix(theta):
-    return np.array([[np.cos(theta), -np.sin(theta), 0, 0],
-                     [np.sin(theta),  np.cos(theta), 0, 0],
-                     [0,0,1,0],
-                     [0,0,0,1]])
-
-def rotation_matrix_4d_xy_xw(theta_xy, theta_xw):
-    """Returns a combined 4x4 rotation matrix for rotation in the xy-plane and xw-plane."""
-    R_xy = np.array([[np.cos(theta_xy), -np.sin(theta_xy), 0, 0],
-                     [np.sin(theta_xy), np.cos(theta_xy),  0, 0],
-                     [0, 0, 1, 0],
-                     [0, 0, 0, 1]])
-    
-    R_xw = np.array([[np.cos(theta_xw), 0, 0, -np.sin(theta_xw)],
-                     [0, 1, 0, 0],
-                     [0, 0, 1, 0],
-                     [np.sin(theta_xw), 0, 0, np.cos(theta_xw)]])
-    
-    return R_xy @ R_xw  # Combine the two rotations
+    [0, 0.276*np.sin(theta), 1, -2.713e-6*np.cos(theta)],
+    [0, 1.835e-8*np.cos(theta), -6.9652e-10*np.cos(theta), 1]])
 
 # Measurement noise covariance matrix R. Basically what we did for P before. Little goof 
 R = calc_R([processed_basal_rate, processed_heart_rate, processed_respiratory])
@@ -199,8 +150,13 @@ omega = np.pi/6
 # Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
 def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
+<<<<<<< HEAD
     #F_rotation = make_F(omega)
     #kf_rot = initialize_kalman_filter(X, P, R, Q, F_rotation, H)
+=======
+    F_rotation = make_F(omega)
+    kf_rot = initialize_kalman_filter(X, P, R, Q_filterpy, F_rotation, H)
+>>>>>>> e9a8d090a2d3a505af6ae62ec8607dc2e409bb6c
     # Arrays to store state estimates and covariances
     xs, cov = [], []
     xs_rot = []
@@ -209,7 +165,6 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     for i in range(n_steps):
         theta_xy = omega_xy * i * dt
         theta_xw = omega_xw * i * dt
-        #kf_rot.F = rotation_matrix_4d_xy_xw(theta_xy, theta_xw)
 
         kf.predict()  # Predict the next state
         #kf_rot.predict()
@@ -245,7 +200,7 @@ print(np.shape(xs))
 xs_reshaped = xs.reshape(612655, 4)
 np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
 
-xs_cbt = xs_reshaped[:1440, 0]
+xs_cbt = xs_reshaped[:15000, 0]
 ys_cbt = np.arange(len(xs_cbt))
 
 # Calculate Standard Deviation of Residuals and MSE
