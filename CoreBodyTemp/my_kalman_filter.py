@@ -60,6 +60,7 @@ time_vals = range(0, len(processed_basal_rate))
 
 # Number of time steps based on your data length
 n_steps = len(processed_basal_rate)
+print("N steps: ", n_steps)
 
 # Create zs matrix: (n_steps, 3) where each row corresponds to measurements at one time step
 zs = np.column_stack((processed_basal_rate, processed_heart_rate, processed_respiratory))
@@ -150,13 +151,8 @@ omega = np.pi/6
 # Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
 def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
-<<<<<<< HEAD
-    #F_rotation = make_F(omega)
-    #kf_rot = initialize_kalman_filter(X, P, R, Q, F_rotation, H)
-=======
     F_rotation = make_F(omega)
     kf_rot = initialize_kalman_filter(X, P, R, Q_filterpy, F_rotation, H)
->>>>>>> e9a8d090a2d3a505af6ae62ec8607dc2e409bb6c
     # Arrays to store state estimates and covariances
     xs, cov = [], []
     xs_rot = []
@@ -167,13 +163,13 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
         theta_xw = omega_xw * i * dt
 
         kf.predict()  # Predict the next state
-        #kf_rot.predict()
+        kf_rot.predict()
         z = zs[i]     # Get the measurements for this time step
         kf.update(z)  # Update with the measurement
-        #kf_rot.update(z)
+        kf_rot.update(z)
 
         xs.append(kf.x)  # Store the state estimate
-        #xs_rot.append(kf_rot.x)
+        xs_rot.append(kf_rot.x)
         cov.append(kf.P) # Store the covariance matrix
 
         # Calculate residuals (difference between measurement and prediction)
@@ -184,13 +180,13 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     # Convert results to numpy arrays for easy handling
     xs = np.array(xs)
     cov = np.array(cov)
-    #xs_rot = np.array(xs_rot)
+    xs_rot = np.array(xs_rot)
     residuals = np.array(residuals) 
 
-    return xs, cov, residuals
+    return xs_rot, cov, residuals
 
 # Run the Kalman filter with your data
-xs, Ps, residuals = run_kalman_filter(X, P, R, Q_manual, F, H, zs, n_steps)
+xs, Ps, residuals = run_kalman_filter(X, P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
