@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 col_to_extract = "value"
 import pandas as pd 
 from sklearn.preprocessing import LabelEncoder
+import sys
+import os
+
+#sys.path.append("F:\FALL 2024\Senior-Project-Modeling-Noah\CoreBodyTemp")
+#from my_kalman_filter import n_steps
 
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
@@ -74,7 +79,6 @@ processed_sleep_time = aligned_sleep_time_df.to_numpy().flatten()
 all_nan_sleep_time = np.isnan(processed_sleep_time)
 sleep_time_sans_nan = processed_sleep_time[~all_nan_sleep_time]
 
-
 # ============================================================================================================================
 # ============================================================================================================================
 
@@ -96,6 +100,7 @@ category_mapping = {
 # Map categories to numeric valuesby one hot encoding
 df_sa_original['onehot_encoded_value'] = df_sa_original['value'].map(category_mapping)
 df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
+df_sa_filtered = df_sa_original[df_sa_original['onehot_encoded_value'] != 2]
 
 # Now we can work with the date time 
 
@@ -103,12 +108,13 @@ df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnaly
 df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
 # convert to datetime 
 df_sa['start'] = pd.to_datetime(df_sa['start'])
+df_sa_filtered = df_sa_filtered[df_sa_filtered['start'] >= '2023-06-01']
 
 #the datetime values will be used 
-df_sa.set_index('start', inplace=True)
+df_sa_filtered.set_index('start', inplace=True)
 
-if df_sa.index.duplicated().any():
-    df_sa = df_sa[~df_sa.index.duplicated(keep='first')]
+if df_sa_filtered.index.duplicated().any():
+    df_sa_filtered = df_sa_filtered[~df_sa_filtered.index.duplicated(keep='first')]
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
@@ -118,69 +124,61 @@ common_time = pd.date_range(start=start_time,
                             freq='min')
 
 #align values with the times 
-sleep_analysis_interpolated = df_sa['onehot_encoded_value'].reindex(common_time).interpolate()
+sleep_analysis_interpolated = df_sa_filtered['onehot_encoded_value'].reindex(common_time).interpolate()
 
 #create a dataframe with start and value columns 
 aligned_sleep_analysis_df = pd.DataFrame({
     'onehot_encoded_value': sleep_analysis_interpolated
 })
 
+
 processed_sleep_analysis = aligned_sleep_analysis_df.to_numpy().flatten()
-all_nan_sleep_analysis = np.isnan(processed_sleep_analysis)
-sleep_analysis_sans_nan = processed_sleep_analysis[~all_nan_sleep_analysis]
-# print(processed_sleep_analysis)
 
-# ====================================================================================================================
+print(processed_sleep_analysis)
 
-# data processing for basal metabolic rate 
-df_be = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv")
+print("Length of common_time:", len(common_time))
+print("Length of processed_sleep_analysis:", len(processed_sleep_analysis))
 
-# convert to datetime 
-df_be['start'] = pd.to_datetime(df_be['start'])
-
-#the datetime values will be used 
-df_be.set_index('start', inplace=True)
-
-if df_be.index.duplicated().any():
-    df_be = df_be[~df_be.index.duplicated(keep='first')]
-
-start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
-#normalize them to a constant frequency 
-common_time = pd.date_range(start=start_time, 
-                            end=end_time, 
-                            freq='min')
-
-#align values with the times 
-basal_interpolated = df_be['value'].reindex(common_time).interpolate()
-
-#create a dataframe with start and value columns 
-aligned_basal_df = pd.DataFrame({
-    'value': basal_interpolated
-})
-
-processed_basal_rate = aligned_basal_df.to_numpy().flatten()
-all_nan_basal_rate = np.isnan(processed_basal_rate)
-basal_rate_sans_nan = processed_basal_rate[~all_nan_basal_rate]
-
-# =============================================================================================================
-
-# Currently, becuase the different data sets have different number of nans, the data sizes are different, 
-# So we use the minimum length of all the data and use that size for all the arrays of data
-
-# Ensuring consistent length of the arrays
-min_length = min(len(basal_rate_sans_nan), len(sleep_analysis_sans_nan), len(sleep_time_sans_nan))
-basal_rate_sans_nan = basal_rate_sans_nan[:min_length]
-sleep_analysis_sans_nan = sleep_analysis_sans_nan[:min_length]
-sleep_time_sans_nan = sleep_time_sans_nan[:min_length]
-
-# Convert to 1D arrays
-basal_rate_sans_nan = np.array(basal_rate_sans_nan).flatten()
-sleep_analysis_sans_nan = np.array(sleep_analysis_sans_nan).flatten()
-sleep_time_sans_nan = np.array(sleep_time_sans_nan).flatten()
 
 # =================================================================================================================
 # =================================================================================================================
 # ================================================    PLOTTING GRAPH     ==========================================
 # =================================================================================================================
 # =================================================================================================================
+
+'''
+# Align sleep data with Kalman filter steps
+aligned_sleep_time = sleep_time_sans_nan[:612655]
+aligned_sleep_analysis = sleep_analysis_sans_nan[:612655]
+
+# Time steps from Kalman filter
+time_steps = range(307242)
+
+# Create the plot
+fig, ax1 = plt.subplots(figsize=(12, 6))
+
+# Plot sleep time on the primary y-axis
+ax1.plot(time_steps, aligned_sleep_time, color='blue', label='Sleep Time')
+ax1.set_xlabel('Time Steps')
+ax1.set_ylabel('Sleep Duration (min)', color='blue')
+ax1.tick_params(axis='y', labelcolor='blue')
+
+# Plot sleep types on the secondary y-axis
+ax2 = ax1.twinx()
+ax2.plot(time_steps, aligned_sleep_analysis, color='orange', label='Sleep Type')
+ax2.set_ylabel('Sleep Type (Encoded)', color='orange')
+ax2.tick_params(axis='y', labelcolor='orange')
+
+# Adding title and legend
+plt.title('Sleep Patterns Aligned with Kalman Filter Time Steps')
+fig.tight_layout()
+plt.show()
+
+plt.figure(figsize=(12, 6))
+plt.plot(common_time, processed_sleep_analysis, label='Sleep States (Smoothed)')
+plt.xlabel('Time')
+plt.ylabel('Sleep Type (Encoded)')
+plt.title('Original Sleep Analysis Data Before Interpolation')
+plt.legend()
+plt.show()
+'''
