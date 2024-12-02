@@ -4,26 +4,27 @@ import csv
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
-from sklearn.preprocessing import LabelEncoder
+#from sklearn.preprocessing import LabelEncoder
 
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
-with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+with open(r'../data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
 # with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_analysis = np.array(column_data) 
-
-with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
+with open(r'../data/PureSleepTime.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_time = np.array(column_data)
-
-with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
+with open(r'../data/PureSleepTime.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
@@ -43,8 +44,9 @@ BE = convert_to_integer(basal_energy)
 # =============================================================================================
 
 # data processing for sleep time
+df_st = pd.read_csv("../data/PureSleepTime.csv")
 #df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
-df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
+#df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
 
 # convert to datetime 
 df_st['start'] = pd.to_datetime(df_st['time'])
@@ -57,6 +59,7 @@ if df_st.index.duplicated().any():
 
 start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
 end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+
 #normalize them to a constant frequency 
 common_time = pd.date_range(start=start_time, 
                             end=end_time, 
@@ -70,16 +73,20 @@ aligned_sleep_time_df = pd.DataFrame({
     'value': sleep_time_interpolated
 })
 
-processed_sleep_time = aligned_sleep_time_df.to_numpy().flatten()
-all_nan_sleep_time = np.isnan(processed_sleep_time)
+print(aligned_sleep_time_df)
+
+all_nan_sleep_time = aligned_sleep_time_df.dropna()
+processed_sleep_time = all_nan_sleep_time.to_numpy().flatten()
 sleep_time_sans_nan = processed_sleep_time[~all_nan_sleep_time]
 
+print(sleep_time_sans_nan)
 
 # ============================================================================================================================
 # ============================================================================================================================
 
 # data processing for sleep analysis 
-df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
+df_sa_original = pd.read_csv('..data/HKCategoryTypeIdentifierSleepAnalysis.csv')
+#df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
 
 # First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
 
@@ -95,7 +102,9 @@ category_mapping = {
 
 # Map categories to numeric valuesby one hot encoding
 df_sa_original['onehot_encoded_value'] = df_sa_original['value'].map(category_mapping)
-df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
+df_sa_original.to_csv('../data/SleepAnalysis_label_data.csv', index=False)
+#df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
+print(df_sa_original)
 
 # Now we can work with the date time 
 
