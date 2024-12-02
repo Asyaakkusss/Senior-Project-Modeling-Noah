@@ -9,21 +9,21 @@ import pandas as pd
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
-with open(r'../data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+with open(r'data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
 # with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_analysis = np.array(column_data) 
-with open(r'../data/PureSleepTime.csv', 'r') as file:
+with open(r'data/PureSleepTime.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_time = np.array(column_data)
-with open(r'../data/PureSleepTime.csv', 'r') as file:
+with open(r'data/PureSleepTime.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
     reader = csv.DictReader(file)
@@ -44,7 +44,7 @@ BE = convert_to_integer(basal_energy)
 # =============================================================================================
 
 # data processing for sleep time
-df_st = pd.read_csv("../data/PureSleepTime.csv")
+df_st = pd.read_csv("data/PureSleepTime.csv")
 #df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
 #df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
 
@@ -75,9 +75,8 @@ aligned_sleep_time_df = pd.DataFrame({
 
 print(aligned_sleep_time_df)
 
-all_nan_sleep_time = aligned_sleep_time_df.dropna()
-processed_sleep_time = all_nan_sleep_time.to_numpy().flatten()
-sleep_time_sans_nan = processed_sleep_time[~all_nan_sleep_time]
+processed_sleep_time = aligned_sleep_time_df.dropna()
+sleep_time_sans_nan = processed_sleep_time.to_numpy().flatten()
 
 print(sleep_time_sans_nan)
 
@@ -85,7 +84,7 @@ print(sleep_time_sans_nan)
 # ============================================================================================================================
 
 # data processing for sleep analysis 
-df_sa_original = pd.read_csv('..data/HKCategoryTypeIdentifierSleepAnalysis.csv')
+df_sa_original = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis.csv')
 #df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
 
 # First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
@@ -102,14 +101,15 @@ category_mapping = {
 
 # Map categories to numeric valuesby one hot encoding
 df_sa_original['onehot_encoded_value'] = df_sa_original['value'].map(category_mapping)
-df_sa_original.to_csv('../data/SleepAnalysis_label_data.csv', index=False)
+df_sa_original.to_csv('data/SleepAnalysis_label_data.csv', index=False)
 #df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
 print(df_sa_original)
 
 # Now we can work with the date time 
 
 # Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
-df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
+df_sa = pd.read_csv('data/SleepAnalysis_label_data.csv')
+#df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
 # convert to datetime 
 df_sa['start'] = pd.to_datetime(df_sa['start'])
 
@@ -134,15 +134,15 @@ aligned_sleep_analysis_df = pd.DataFrame({
     'onehot_encoded_value': sleep_analysis_interpolated
 })
 
-processed_sleep_analysis = aligned_sleep_analysis_df.to_numpy().flatten()
-all_nan_sleep_analysis = np.isnan(processed_sleep_analysis)
-sleep_analysis_sans_nan = processed_sleep_analysis[~all_nan_sleep_analysis]
-# print(processed_sleep_analysis)
+processed_sleep_analysis = aligned_sleep_analysis_df.dropna()
+sleep_analysis_sans_nan = processed_sleep_analysis.to_numpy().flatten()
+
+print(processed_sleep_analysis)
 
 # ====================================================================================================================
 
 # data processing for basal metabolic rate 
-df_be = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv")
+df_be = pd.read_csv("data/BasalEnergyBurned.csv")
 
 # convert to datetime 
 df_be['start'] = pd.to_datetime(df_be['start'])
@@ -168,9 +168,10 @@ aligned_basal_df = pd.DataFrame({
     'value': basal_interpolated
 })
 
-processed_basal_rate = aligned_basal_df.to_numpy().flatten()
-all_nan_basal_rate = np.isnan(processed_basal_rate)
-basal_rate_sans_nan = processed_basal_rate[~all_nan_basal_rate]
+
+
+processed_basal_rate = aligned_basal_df.dropna()
+basal_rate_sans_nan = processed_basal_rate.to_numpy().flatten()
 
 # =============================================================================================================
 
@@ -193,3 +194,7 @@ sleep_time_sans_nan = np.array(sleep_time_sans_nan).flatten()
 # ================================================    PLOTTING GRAPH     ==========================================
 # =================================================================================================================
 # =================================================================================================================
+
+print(basal_rate_sans_nan)
+print(sleep_analysis_sans_nan)
+print(sleep_time_sans_nan)

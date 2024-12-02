@@ -4,59 +4,190 @@ import csv
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
-from filterpy.kalman import predict
-from filterpy.common import Q_discrete_white_noise
-from filterpy.kalman import KalmanFilter
-from sklearn.preprocessing import LabelEncoder
+#from sklearn.preprocessing import LabelEncoder
 
-#both of inputs need to be strings. column of interest is time for pure sleep time and start for the basal metabolic rate and the hk sleep time
-def process_numerical_data(csv_string, column_of_interest): 
-    # data processing for sleep time
-    dataframe = pd.read_csv(csv_string)
+# Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
-    # convert to datetime 
-    dataframe['start'] = pd.to_datetime(dataframe[column_of_interest])
+# Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
+with open(r'data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+# with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+    reader = csv.DictReader(file)
+    column_data = [row[col_to_extract] for row in reader]
 
-    #the datetime values will be used 
-    dataframe.set_index('start', inplace=True)
+sleep_analysis = np.array(column_data) 
+with open(r'data/PureSleepTime.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
+    reader = csv.DictReader(file)
+    column_data = [row[col_to_extract] for row in reader]
 
-    if dataframe.index.duplicated().any():
-        dataframe = dataframe[~dataframe.index.duplicated(keep='first')]
+sleep_time = np.array(column_data)
+with open(r'data/PureSleepTime.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
+    reader = csv.DictReader(file)
+    column_data = [row[col_to_extract] for row in reader]
 
-    start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-    end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
-    #normalize them to a constant frequency 
-    common_time = pd.date_range(start=start_time, 
-                                end=end_time, 
-                                freq='min')
+basal_energy = np.array(column_data)
 
-    #align values with the times 
-    interpolated_data = dataframe['value'].reindex(common_time).interpolate()
+#convert the arrays to integers 
+def convert_to_integer(array): 
+    return np.array(array).astype(float)
 
-    #create a dataframe with start and value columns 
-    aligned_dataframe = pd.DataFrame({
-        'value': interpolated_data
-        })
+ST = convert_to_integer(sleep_time)
+BE = convert_to_integer(basal_energy)
 
-    processed_data = aligned_dataframe.to_numpy().flatten()
-    all_nan_data = np.isnan(processed_data)
-    non_nan_processed_data = processed_data[~all_nan_data]
 
-    return non_nan_processed_data
+# =============================================================================================
+# ============================= DATA PROCESSING ===============================================
+# =============================================================================================
 
-#column of interest is "onehot_encoded_value", mapped column is "value". feed the generated csv into the
-#process_numerical_data method after running this method. 
-def process_categorical_data(csv_string, column_of_interest, mapped_column, category_mapping): 
+# data processing for sleep time
+df_st = pd.read_csv("data/PureSleepTime.csv")
+#df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
+#df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
 
-    # data processing for sleep analysis 
-    df_sa_original = pd.read_csv(csv_string)
+# convert to datetime 
+df_st['start'] = pd.to_datetime(df_st['time'])
 
-    # First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
+#the datetime values will be used 
+df_st.set_index('start', inplace=True)
 
-    
-    # Map categories to numeric valuesby one hot encoding
-    df_sa_original[column_of_interest] = df_sa_original[mapped_column].map(category_mapping)
-    df_sa_original.to_csv('data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv', index=False)  # save to new csv file
+if df_st.index.duplicated().any():
+    df_st1 = df_st[~df_st.index.duplicated(keep='first')]
+
+start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+
+#normalize them to a constant frequency 
+common_time = pd.date_range(start=start_time, 
+                            end=end_time, 
+                            freq='min')
+
+#align values with the times 
+sleep_time_interpolated = df_st['value'].reindex(common_time).interpolate()
+
+#create a dataframe with start and value columns 
+aligned_sleep_time_df = pd.DataFrame({
+    'value': sleep_time_interpolated
+})
+
+print(aligned_sleep_time_df)
+
+processed_sleep_time = aligned_sleep_time_df.dropna()
+sleep_time_sans_nan = processed_sleep_time.to_numpy().flatten()
+
+print(sleep_time_sans_nan)
+
+# ============================================================================================================================
+# ============================================================================================================================
+
+# data processing for sleep analysis 
+df_sa_original = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis.csv')
+#df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
+
+# First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
+
+# Category mapping for the values in the csv
+category_mapping = {
+    "HKCategoryValueSleepAnalysisInBed": 2,
+    "HKCategoryValueSleepAnalysisAsleepREM": 3,
+    "HKCategoryValueSleepAnalysisAsleepDeep": 4,
+    "HKCategoryValueSleepAnalysisAsleepCore": 5,
+    "HKCategoryValueSleepAnalysisAwake": 1,
+    "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
+}
+
+# Map categories to numeric valuesby one hot encoding
+df_sa_original['onehot_encoded_value'] = df_sa_original['value'].map(category_mapping)
+df_sa_original.to_csv('data/SleepAnalysis_label_data.csv', index=False)
+#df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
+print(df_sa_original)
+
+# Now we can work with the date time 
+
+# Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
+df_sa = pd.read_csv('data/SleepAnalysis_label_data.csv')
+#df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
+# convert to datetime 
+df_sa['start'] = pd.to_datetime(df_sa['start'])
+
+#the datetime values will be used 
+df_sa.set_index('start', inplace=True)
+
+if df_sa.index.duplicated().any():
+    df_sa = df_sa[~df_sa.index.duplicated(keep='first')]
+
+start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+#normalize them to a constant frequency 
+common_time = pd.date_range(start=start_time, 
+                            end=end_time, 
+                            freq='min')
+
+#align values with the times 
+sleep_analysis_interpolated = df_sa['onehot_encoded_value'].reindex(common_time).interpolate()
+
+#create a dataframe with start and value columns 
+aligned_sleep_analysis_df = pd.DataFrame({
+    'onehot_encoded_value': sleep_analysis_interpolated
+})
+
+processed_sleep_analysis = aligned_sleep_analysis_df.dropna()
+sleep_analysis_sans_nan = processed_sleep_analysis.to_numpy().flatten()
+
+print(processed_sleep_analysis)
+
+# ====================================================================================================================
+
+# data processing for basal metabolic rate 
+df_be = pd.read_csv("data/BasalEnergyBurned.csv")
+
+# convert to datetime 
+df_be['start'] = pd.to_datetime(df_be['start'])
+
+#the datetime values will be used 
+df_be.set_index('start', inplace=True)
+
+if df_be.index.duplicated().any():
+    df_be = df_be[~df_be.index.duplicated(keep='first')]
+
+start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+#normalize them to a constant frequency 
+common_time = pd.date_range(start=start_time, 
+                            end=end_time, 
+                            freq='min')
+
+#align values with the times 
+basal_interpolated = df_be['value'].reindex(common_time).interpolate()
+
+#create a dataframe with start and value columns 
+aligned_basal_df = pd.DataFrame({
+    'value': basal_interpolated
+})
+
+
+
+processed_basal_rate = aligned_basal_df.dropna()
+basal_rate_sans_nan = processed_basal_rate.to_numpy().flatten()
+
+# =============================================================================================================
+
+# Currently, becuase the different data sets have different number of nans, the data sizes are different, 
+# So we use the minimum length of all the data and use that size for all the arrays of data
+
+# Ensuring consistent length of the arrays
+min_length = min(len(basal_rate_sans_nan), len(sleep_analysis_sans_nan), len(sleep_time_sans_nan))
+basal_rate_sans_nan = basal_rate_sans_nan[:min_length]
+sleep_analysis_sans_nan = sleep_analysis_sans_nan[:min_length]
+sleep_time_sans_nan = sleep_time_sans_nan[:min_length]
+
+# Convert to 1D arrays
+basal_rate_sans_nan = np.array(basal_rate_sans_nan).flatten()
+sleep_analysis_sans_nan = np.array(sleep_analysis_sans_nan).flatten()
+sleep_time_sans_nan = np.array(sleep_time_sans_nan).flatten()
 
 def calc_R(arrays):     
     unified_array = np.array(arrays)
