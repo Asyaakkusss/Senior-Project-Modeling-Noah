@@ -8,6 +8,8 @@ import pandas as pd
 
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
+# This does nothing
+'''
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
 with open(r'data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
@@ -37,159 +39,124 @@ def convert_to_integer(array):
 
 ST = convert_to_integer(sleep_time)
 BE = convert_to_integer(basal_energy)
-
+'''
 
 # =============================================================================================
 # ============================= DATA PROCESSING ===============================================
 # =============================================================================================
 
-# data processing for sleep time
-df_st = pd.read_csv("data/PureSleepTime.csv")
-#df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
-#df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
+def regularize_time():
+    df_st_original = pd.read_csv("data/PureSleepTime.csv")
+    df_st_original['start'] = pd.to_datetime(df_st_original['time'])
+    df_st_original.to_csv('data/SleepTime_label_data.csv', index=False)
+    #df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
 
-# convert to datetime 
-df_st['start'] = pd.to_datetime(df_st['time'])
+    df_st = adapt_change(df_st_original, "Sleep_Time")
 
-#the datetime values will be used 
-df_st.set_index('start', inplace=True)
+    return df_st
 
-if df_st.index.duplicated().any():
-    df_st1 = df_st[~df_st.index.duplicated(keep='first')]
+def regularize_metabolism():
+    # data processing for basal metabolic rate 
+    df_be_original = pd.read_csv("data/BasalEnergyBurned.csv")
+    df_be_original['start'] = pd.to_datetime(df_be_original['start'])
 
-start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
+    df_be = adapt_change(df_be_original, "Basal_Energy_Burned")
 
-#normalize them to a constant frequency 
-common_time = pd.date_range(start=start_time, 
-                            end=end_time, 
-                            freq='min')
+    return df_be
 
-#align values with the times 
-sleep_time_interpolated = df_st['value'].reindex(common_time).interpolate()
+def regularize_analysis():
+    df_sa_original = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis.csv')
+    df_sa_original['start'] = pd.to_datetime(df_sa_original['start'])
+    #df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
 
-#create a dataframe with start and value columns 
-aligned_sleep_time_df = pd.DataFrame({
-    'value': sleep_time_interpolated
-})
+    # First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
 
-print(aligned_sleep_time_df)
+    # Category mapping for the values in the csv
+    category_mapping = {
+        "HKCategoryValueSleepAnalysisInBed": 2,
+        "HKCategoryValueSleepAnalysisAsleepREM": 3,
+        "HKCategoryValueSleepAnalysisAsleepDeep": 4,
+        "HKCategoryValueSleepAnalysisAsleepCore": 5,
+        "HKCategoryValueSleepAnalysisAwake": 1,
+        "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
+    }
 
-processed_sleep_time = aligned_sleep_time_df.dropna()
-sleep_time_sans_nan = processed_sleep_time.to_numpy().flatten()
+    # Map categories to numeric valuesby one hot encoding
+    df_sa_original['value'] = df_sa_original['value'].map(category_mapping)
+    
+    #I don't think it's helpful to save the csv...
+    df_sa_original.to_csv('data/SleepAnalysis_label_data.csv', index=False)
+    #df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
 
-print(sleep_time_sans_nan)
+    # Now we can work with the date time 
+    df_sa_filtered = df_sa_original[df_sa_original['value'] != 2]
+    # Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
+    #df_sa = pd.read_csv('data/SleepAnalysis_label_data.csv')
+    #df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
+    
+    # convert to fit ranges
+    df_sa = adapt_change(df_sa_filtered, "Sleep_Analysis")
+    
+    return df_sa
 
-# ============================================================================================================================
-# ============================================================================================================================
+def adapt_change(time_df: pd.DataFrame, data_name) -> pd.DataFrame:
+    #the datetime values will be used 
+    time_df.set_index('start', inplace=True)
 
-# data processing for sleep analysis 
-df_sa_original = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis.csv')
-#df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
+    if time_df.index.duplicated().any():
+        time_df = time_df[~time_df.index.duplicated(keep='first')]
 
-# First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
+    start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
+    end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
 
-# Category mapping for the values in the csv
-category_mapping = {
-    "HKCategoryValueSleepAnalysisInBed": 2,
-    "HKCategoryValueSleepAnalysisAsleepREM": 3,
-    "HKCategoryValueSleepAnalysisAsleepDeep": 4,
-    "HKCategoryValueSleepAnalysisAsleepCore": 5,
-    "HKCategoryValueSleepAnalysisAwake": 1,
-    "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
-}
+    #normalize them to a constant frequency 
+    common_time = pd.date_range(start=start_time, 
+                                end=end_time, 
+                                freq='min')
 
-# Map categories to numeric valuesby one hot encoding
-df_sa_original['onehot_encoded_value'] = df_sa_original['value'].map(category_mapping)
-df_sa_original.to_csv('data/SleepAnalysis_label_data.csv', index=False)
-#df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
-print(df_sa_original)
+    #align values with the times 
+    print("Original time_df:\n", time_df.head())
+    #interpolated_df: pd.DataFrame = time_df['value'].reindex(common_time).interpolate()
+    #print("After reindex and interpolate:\n", interpolated_df.head())
 
-# Now we can work with the date time 
+    # Ensure both are sorted before merging
+    time_df = time_df.sort_index()
+    common_time_df = pd.DataFrame(index=common_time)
 
-# Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
-df_sa = pd.read_csv('data/SleepAnalysis_label_data.csv')
-#df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
-# convert to datetime 
-df_sa['start'] = pd.to_datetime(df_sa['start'])
+    aligned_df = pd.merge_asof(
+        common_time_df, time_df, left_index=True, right_index=True, direction='nearest'
+    )
 
-#the datetime values will be used 
-df_sa.set_index('start', inplace=True)
+    aligned_df = pd.DataFrame({
+    'value': time_df['value']
+    }, index=time_df.index)
 
-if df_sa.index.duplicated().any():
-    df_sa = df_sa[~df_sa.index.duplicated(keep='first')]
+    processed_df = aligned_df.dropna()
+    #df_sans_nan = processed_df.to_numpy().flatten()
 
-start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
-#normalize them to a constant frequency 
-common_time = pd.date_range(start=start_time, 
-                            end=end_time, 
-                            freq='min')
+    print("Length of common_time:", len(common_time))
+    print("Length of processed analysis:", len(processed_df))
+    print(processed_df)
+    return processed_df
 
-#align values with the times 
-sleep_analysis_interpolated = df_sa['onehot_encoded_value'].reindex(common_time).interpolate()
+def convert_1D():
+    sleep_time_sans_nan = regularize_time()
+    sleep_analysis_sans_nan = regularize_analysis()
+    basal_rate_sans_nan = regularize_metabolism()
 
-#create a dataframe with start and value columns 
-aligned_sleep_analysis_df = pd.DataFrame({
-    'onehot_encoded_value': sleep_analysis_interpolated
-})
+    # Currently, becuase the different data sets have different number of nans, the data sizes are different, 
+    # So we use the minimum length of all the data and use that size for all the arrays of data
 
-processed_sleep_analysis = aligned_sleep_analysis_df.dropna()
-sleep_analysis_sans_nan = processed_sleep_analysis.to_numpy().flatten()
+    # Ensuring consistent length of the arrays
+    min_length = min(len(basal_rate_sans_nan), len(sleep_analysis_sans_nan), len(sleep_time_sans_nan))
+    basal_rate_sans_nan = basal_rate_sans_nan[:min_length]
+    sleep_analysis_sans_nan = sleep_analysis_sans_nan[:min_length]
+    sleep_time_sans_nan = sleep_time_sans_nan[:min_length]
 
-print(processed_sleep_analysis)
+    # Convert to 1D arrays
+    basal_rate_sans_nan_1D = np.array(basal_rate_sans_nan).flatten()
+    sleep_analysis_sans_nan_1D = np.array(sleep_analysis_sans_nan).flatten()
+    sleep_time_sans_nan_1D = np.array(sleep_time_sans_nan).flatten()
 
-# ====================================================================================================================
+    return basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D
 
-# data processing for basal metabolic rate 
-df_be = pd.read_csv("data/BasalEnergyBurned.csv")
-
-# convert to datetime 
-df_be['start'] = pd.to_datetime(df_be['start'])
-
-#the datetime values will be used 
-df_be.set_index('start', inplace=True)
-
-if df_be.index.duplicated().any():
-    df_be = df_be[~df_be.index.duplicated(keep='first')]
-
-start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
-#normalize them to a constant frequency 
-common_time = pd.date_range(start=start_time, 
-                            end=end_time, 
-                            freq='min')
-
-#align values with the times 
-basal_interpolated = df_be['value'].reindex(common_time).interpolate()
-
-#create a dataframe with start and value columns 
-aligned_basal_df = pd.DataFrame({
-    'value': basal_interpolated
-})
-
-
-
-processed_basal_rate = aligned_basal_df.dropna()
-basal_rate_sans_nan = processed_basal_rate.to_numpy().flatten()
-
-# =============================================================================================================
-
-# Currently, becuase the different data sets have different number of nans, the data sizes are different, 
-# So we use the minimum length of all the data and use that size for all the arrays of data
-
-# Ensuring consistent length of the arrays
-min_length = min(len(basal_rate_sans_nan), len(sleep_analysis_sans_nan), len(sleep_time_sans_nan))
-basal_rate_sans_nan = basal_rate_sans_nan[:min_length]
-sleep_analysis_sans_nan = sleep_analysis_sans_nan[:min_length]
-sleep_time_sans_nan = sleep_time_sans_nan[:min_length]
-
-# Convert to 1D arrays
-basal_rate_sans_nan = np.array(basal_rate_sans_nan).flatten()
-sleep_analysis_sans_nan = np.array(sleep_analysis_sans_nan).flatten()
-sleep_time_sans_nan = np.array(sleep_time_sans_nan).flatten()
-
-def calc_R(arrays):     
-    unified_array = np.array(arrays)
-    R = np.cov(unified_array)
-    return R 

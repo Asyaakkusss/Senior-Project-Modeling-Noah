@@ -4,13 +4,14 @@ import csv
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
-from sklearn.preprocessing import LabelEncoder
-import sys
-import os
+import data_processing as dp
+
+
+basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D = dp.convert_1D()
 
 #sys.path.append("F:\FALL 2024\Senior-Project-Modeling-Noah\CoreBodyTemp")
 #from my_kalman_filter import n_steps
-
+'''
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
@@ -43,106 +44,7 @@ def convert_to_integer(array):
 ST = convert_to_integer(sleep_time)
 BE = convert_to_integer(basal_energy)
 
-
-# =============================================================================================
-# ============================= DATA PROCESSING ===============================================
-# =============================================================================================
-
-# data processing for sleep time
-df_st = pd.read_csv("data/PureSleepTime.csv")
-#df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
-#df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
-
-# convert to datetime 
-df_st['start'] = pd.to_datetime(df_st['time'])
-
-#the datetime values will be used 
-df_st.set_index('start', inplace=True)
-
-if df_st.index.duplicated().any():
-    df_st1 = df_st[~df_st.index.duplicated(keep='first')]
-
-start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
-
-#normalize them to a constant frequency 
-common_time = pd.date_range(start=start_time, 
-                            end=end_time, 
-                            freq='min')
-
-#align values with the times 
-sleep_time_interpolated = df_st['value'].reindex(common_time).interpolate()
-
-#create a dataframe with start and value columns 
-aligned_sleep_time_df = pd.DataFrame({
-    'value': sleep_time_interpolated
-})
-
-print(aligned_sleep_time_df)
-
-# ============================================================================================================================
-# ============================================================================================================================
-
-# data processing for sleep analysis 
-df_sa_original = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis.csv')
-#df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
-
-# First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
-
-# Category mapping for the values in the csv
-category_mapping = {
-    "HKCategoryValueSleepAnalysisInBed": 2,
-    "HKCategoryValueSleepAnalysisAsleepREM": 3,
-    "HKCategoryValueSleepAnalysisAsleepDeep": 4,
-    "HKCategoryValueSleepAnalysisAsleepCore": 5,
-    "HKCategoryValueSleepAnalysisAwake": 1,
-    "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
-}
-
-# Map categories to numeric valuesby one hot encoding
-df_sa_original['onehot_encoded_value'] = df_sa_original['value'].map(category_mapping)
-df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
-df_sa_filtered = df_sa_original[df_sa_original['onehot_encoded_value'] != 2]
-
-# Now we can work with the date time 
-
-# Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
-df_sa = pd.read_csv('data/SleepAnalysis_label_data.csv')
-#df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
-# convert to datetime 
-df_sa['start'] = pd.to_datetime(df_sa['start'])
-df_sa_filtered = df_sa_filtered[df_sa_filtered['start'] >= '2023-06-01']
-
-#the datetime values will be used 
-df_sa_filtered.set_index('start', inplace=True)
-
-if df_sa_filtered.index.duplicated().any():
-    df_sa_filtered = df_sa_filtered[~df_sa_filtered.index.duplicated(keep='first')]
-
-start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
-#normalize them to a constant frequency 
-common_time = pd.date_range(start=start_time, 
-                            end=end_time, 
-                            freq='min')
-
-#align values with the times 
-sleep_analysis_interpolated = df_sa_filtered['onehot_encoded_value'].reindex(common_time).interpolate()
-
-#create a dataframe with start and value columns 
-aligned_sleep_analysis_df = pd.DataFrame({
-    'onehot_encoded_value': sleep_analysis_interpolated
-})
-
-processed_sleep_analysis = aligned_sleep_analysis_df.dropna()
-sleep_analysis_sans_nan = processed_sleep_analysis.to_numpy().flatten()
-
-print(processed_sleep_analysis)
-
-print(processed_sleep_analysis)
-
-print("Length of common_time:", len(common_time))
-print("Length of processed_sleep_analysis:", len(processed_sleep_analysis))
+'''
 
 
 # =================================================================================================================
@@ -151,14 +53,28 @@ print("Length of processed_sleep_analysis:", len(processed_sleep_analysis))
 # =================================================================================================================
 # =================================================================================================================
 
-'''
+
 # Align sleep data with Kalman filter steps
-aligned_sleep_time = sleep_time_sans_nan[:612655]
-aligned_sleep_analysis = sleep_analysis_sans_nan[:612655]
+#used to be 612655
+amount_of_time = 1440
+
+aligned_sleep_time = sleep_time_sans_nan_1D[:amount_of_time]
+aligned_sleep_analysis = sleep_analysis_sans_nan_1D[:amount_of_time]
 
 # Time steps from Kalman filter
 time_steps = range(307242)
 
+#Overlaying the graphs for comparison
+plt.figure(figsize=(15, 6))
+
+plt.plot(basal_rate_sans_nan_1D[:amount_of_time], label='Basal Rate', alpha=0.7, linestyle='-')
+plt.plot(aligned_sleep_analysis, label='Sleep Analysis', alpha=0.7, linestyle='--')
+plt.plot(aligned_sleep_time, label='Sleep Time', alpha=0.7, linestyle=':')
+plt.title('Comparison of Basal Rate, Sleep Analysis, and Sleep Time (First 1440 Minutes)')
+plt.ylabel('Values')
+plt.legend()
+plt.show()
+'''
 # Create the plot
 fig, ax1 = plt.subplots(figsize=(12, 6))
 
@@ -180,7 +96,7 @@ fig.tight_layout()
 plt.show()
 
 plt.figure(figsize=(12, 6))
-plt.plot(common_time, processed_sleep_analysis, label='Sleep States (Smoothed)')
+plt.plot(time_steps, sleep_analysis_sans_nan_1D, label='Sleep States (Smoothed)')
 plt.xlabel('Time')
 plt.ylabel('Sleep Type (Encoded)')
 plt.title('Original Sleep Analysis Data Before Interpolation')
