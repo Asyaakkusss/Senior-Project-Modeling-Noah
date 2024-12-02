@@ -194,7 +194,9 @@ print(np.shape(xs))
 
 
 xs_reshaped = xs.reshape(612655, 4)
-np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
+
+#Removed this line because it creates an inordinately large file
+#np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
 
 xs_cbt = xs_reshaped[:15000, 0]
 ys_cbt = np.arange(len(xs_cbt))

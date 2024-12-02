@@ -7,27 +7,31 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
-from sklearn.preprocessing import LabelEncoder
+#from sklearn.preprocessing import LabelEncoder
 
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
-with open(r'/home/asyaakkus/Senior-Project-Modeling-Noah/data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+with open(r'data/HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
 # with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_analysis = np.array(column_data) 
 
-with open(r'/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv', 'r') as file:
+with open(r'data/PureSleepTime.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv', 'r') as file:
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
 sleep_time = np.array(column_data)
 
-with open(r'/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv', 'r') as file:
+with open(r'data/PureSleepTime.csv', 'r') as file:
 #with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
+#with open(r'F:\FALL 2024\Senior-Project-Modeling-Noah\data\BasalEnergyBurned.csv', 'r') as file:
+    reader = csv.DictReader(file)
     reader = csv.DictReader(file)
     column_data = [row[col_to_extract] for row in reader]
 
@@ -46,9 +50,9 @@ BE = convert_to_integer(basal_energy)
 # =============================================================================================
 
 # data processing for sleep time
-df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
+df_st = pd.read_csv("data/PureSleepTime.csv")
+#df_st = pd.read_csv("/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv")
 #df_st = pd.read_csv("F:\FALL 2024\Senior-Project-Modeling-Noah\data\PureSleepTime.csv")
-
 # convert to datetime 
 df_st['start'] = pd.to_datetime(df_st['time'])
 
@@ -83,6 +87,8 @@ sleep_time_sans_nan = processed_sleep_time[~all_nan_sleep_time]
 
 # data processing for sleep analysis 
 df_sa_original = pd.read_csv('data/HKCategoryTypeIdentifierSleepAnalysis.csv')
+#df_sa_original = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\HKCategoryTypeIdentifierSleepAnalysis.csv')
+
 
 # First we are adding the column with the one hot encoded value to 'quantify' the sleep analysis data
 
@@ -128,10 +134,13 @@ aligned_sleep_analysis_df = pd.DataFrame({
     'onehot_encoded_value': sleep_analysis_interpolated
 })
 
+print(aligned_sleep_analysis_df)
+
 processed_sleep_analysis = aligned_sleep_analysis_df.to_numpy().flatten()
 all_nan_sleep_analysis = np.isnan(processed_sleep_analysis)
 sleep_analysis_sans_nan = processed_sleep_analysis[~all_nan_sleep_analysis]
-# print(processed_sleep_analysis)
+
+print(sleep_analysis_sans_nan)
 
 # ====================================================================================================================
 
@@ -162,9 +171,13 @@ aligned_basal_df = pd.DataFrame({
     'value': basal_interpolated
 })
 
+print(aligned_basal_df)
+
 processed_basal_rate = aligned_basal_df.to_numpy().flatten()
 all_nan_basal_rate = np.isnan(processed_basal_rate)
 basal_rate_sans_nan = processed_basal_rate[~all_nan_basal_rate]
+
+print(basal_rate_sans_nan)
 
 # =============================================================================================================
 
