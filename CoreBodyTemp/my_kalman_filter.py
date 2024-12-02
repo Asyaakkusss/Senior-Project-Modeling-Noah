@@ -34,9 +34,9 @@ RR last timestamp:  [Timestamp('2024-09-05 08:27:27-0400', tz='UTC-04:00') 11.0]
 
 '''
 #preprocess the data 
-resp_rate_csv_string = "F:/FALL 2024/Senior-Project-Modeling-Noah/data/RespiratoryRate.csv"
-heart_rate_csv_string = "F:/FALL 2024/Senior-Project-Modeling-Noah/data/HeartRate.csv"
-basal_rate_csv_string = "F:/FALL 2024/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
+resp_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/RespiratoryRate.csv"
+heart_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/HeartRate.csv"
+basal_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
 col_interest = 'start'
 processed_respiratory = process_numerical_data(resp_rate_csv_string, col_interest)
 processed_heart_rate = process_numerical_data(heart_rate_csv_string, col_interest)
@@ -149,7 +149,7 @@ omega_xy = np.pi/6
 omega_xw = np.pi/8
 omega = np.pi/6
 # Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
-def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
+def run_kalman_filter_cbt(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
     F_rotation = make_F(omega)
     kf_rot = initialize_kalman_filter(X, P, R, Q_filterpy, F_rotation, H)
@@ -186,7 +186,7 @@ def run_kalman_filter(X, P, R, Q, F, H, zs, n_steps):
     return xs_rot, cov, residuals
 
 # Run the Kalman filter with your data
-xs, Ps, residuals = run_kalman_filter(X, P, R, Q_filterpy, F, H, zs, n_steps)
+xs, Ps, residuals = run_kalman_filter_cbt(X, P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including core body temperature estimates over time
 print(type(xs))
@@ -200,6 +200,8 @@ xs_reshaped = xs.reshape(612655, 4)
 
 xs_cbt = xs_reshaped[:15000, 0]
 ys_cbt = np.arange(len(xs_cbt))
+
+np.savetxt("/home/asyaakkus/Senior-Project-Modeling-Noah/Ensemble/cbtarray.csv",xs_cbt)
 
 # Calculate Standard Deviation of Residuals and MSE
 residual_std = np.std(residuals, axis=0)

@@ -1,59 +1,45 @@
-# imports
-
-import numpy as np 
-import os
-import csv 
-
+import sys 
+sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
+import data_processing
+from data_processing import process_categorical_data, process_numerical_data, calc_R
 import pandas as pd 
+import numpy as np 
 import matplotlib.pyplot as plt 
-
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
-import sys 
-sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
-from data_processing import process_categorical_data, process_numerical_data, calc_R, calc_X
 
 
-#preprocess the data 
-physical_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/PhysicalEffort.csv"
-basal_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
-col_interest = 'start'
-processed_phys_rate = process_numerical_data(physical_csv_string, col_interest)
-processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interest)
+# Load CSV into a DataFrame
+df_cbt = pd.read_csv("cbtarray.csv")
+df_hun = pd.read_csv("hungerarray.csv")
 
-#the three arrays have null values, so we crop the nulls out to leave as much valid data as possible  
-processed_phys_rate = processed_phys_rate[612:]
-processed_basal_rate = processed_basal_rate[612:]
-print (processed_phys_rate)
+# Convert to a NumPy array
+arr_cbt = df_cbt.to_numpy().flatten()
+arr_hun = df_hun.to_numpy().flatten()
 
-#thr three arrays are now different lengths, so we find the minimum length and cut off the maximum index of an array at that minimum length 
-min_length = min(len(processed_phys_rate), len(processed_basal_rate))
-
-#create the index values for the p matrix by finding covariance between the three arrays 
-processed_basal_rate = processed_basal_rate[:min_length]
-processed_phys_rate = processed_phys_rate[:min_length]
+ys = np.arange(len(arr_cbt))
 
 
-time_vals = range(0, len(processed_basal_rate))
+time_vals = range(0, len(arr_cbt))
 
 # Number of time steps based on your data length
-n_steps = len(processed_basal_rate)
+n_steps = len(arr_cbt)
 
 # Create zs matrix: (n_steps, 3) where each row corresponds to measurements at one time step
-zs = np.column_stack((processed_basal_rate, processed_phys_rate))
+zs = np.column_stack((arr_cbt, arr_hun))
 
 P = np.array([
-        [1, 0, 0], #hunger cycle 
-        [0, 22, 0], #BMR
-        [0, 0, 12.5], #PE
+        [1, 0, 0], #ensemble
+        [0, 97, 0], #cbt
+        [0, 0, 10], #hunger
     ])
-# Initial state X (based on means of X)
 
+# Initial state X (based on means of X)
 X = np.array([
-    [1],
-    [np.mean(processed_basal_rate[650:])],
-    [np.mean(processed_phys_rate[650:])],
+    [0],
+    [np.mean(arr_cbt)],
+    [np.mean(arr_hun)],
 ])
 
 
@@ -75,7 +61,7 @@ def make_F(theta):
     ])
 
 # Measurement noise covariance matrix R. Basically what we did for P before. Little goof 
-R = calc_R([processed_basal_rate, processed_phys_rate])
+R = calc_R([arr_cbt, arr_hun])
 print(R)
 
 # Two options for Q (process noise covariance)
@@ -89,8 +75,8 @@ Q_manual = np.array([
 
 # Measurement matrix H (maps state to measurement)
 H = np.array([
-    [0, 1, 0],  # basal rate mapping
-    [0, 0, 1],  # phys rate mapping 
+    [0, 1, 0],  # cbt mapping 
+    [0, 0, 1],  # hunger mapping 
 ])
 
 # Kalman filter initialization
@@ -106,7 +92,7 @@ def initialize_kalman_filter(X, P, R, Q, F, H):
 
 omega_xy = np.pi/6
 omega_xw = np.pi/8
-omega = np.pi/6
+omega = np.pi/8
 # Kalman filter loop: Predict and update steps | here I am also finding the residuals inside the Kalman filter loop
 def run_kalman_filter_hunger(X, P, R, Q, F, H, zs, n_steps):
     kf = initialize_kalman_filter(X, P, R, Q, F, H)
@@ -152,11 +138,10 @@ print(type(xs))
 print(np.shape(xs))
 
 
-xs_reshaped = xs.reshape(302171, 3)
+xs_reshaped = xs.reshape(14999, 3)
 
 xs_cbt = xs_reshaped[:15000, 0]
 ys_cbt = np.arange(len(xs_cbt))
-np.savetxt("/home/asyaakkus/Senior-Project-Modeling-Noah/Ensemble/hungerarray.csv",xs_cbt)
 
 
 # Calculate Standard Deviation of Residuals and MSE
@@ -169,22 +154,15 @@ mse_cbt = mse[:, 0]  # Extract MSE for CBT
 print("Standard Deviation of Residuals:", residual_std_cbt)
 print("Mean Squared Error (MSE):", mse_cbt)
 
-plt.plot(ys_cbt, xs_cbt, label='Predicted Hunger Levels')
-plt.title('Predicted Hunger over Time')
+plt.plot(ys_cbt, xs_cbt, label='Predicted Ensemble Levels')
+plt.title('Predicted Ensemble over Time')
 plt.xlabel('Time Steps')
-plt.ylabel('CBT Estimate')
+plt.ylabel('Ensemble Estimate')
 plt.legend()
-'''
-# Plot Residuals
-plt.subplot(2, 1, 2)  # Second plot in the grid
-plt.plot(ys_cbt, residuals[:len(ys_cbt), 0], label='Residuals (CBT)')
-plt.title('Residuals of Core Body Temperature Over Time')
-plt.xlabel('Time Steps')
-plt.ylabel('Residual (Measurement - Prediction)')
-plt.legend()
-'''
+
 
 # Show the final plot with both graphs
 plt.tight_layout()
-plt.savefig('feeding_output.png')
+plt.savefig('ensemble_output.png')
 plt.show()
+
