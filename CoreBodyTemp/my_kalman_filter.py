@@ -80,6 +80,7 @@ P = np.array([
         [0, 0, 160, 0], #HR
         [0, 0, 0, 16], #RR
     ])
+
 # Initial state X (based on means of X)
 X = np.array([
     [97],

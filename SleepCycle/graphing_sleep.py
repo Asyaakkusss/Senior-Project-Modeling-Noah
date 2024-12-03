@@ -64,13 +64,10 @@ aligned_sleep_analysis = sleep_analysis_sans_nan_1D[:amount_of_time]
 # Time steps from Kalman filter
 time_steps = range(307242)
 
-#Overlaying the graphs for comparison
-plt.figure(figsize=(15, 6))
-
-plt.plot(basal_rate_sans_nan_1D[:amount_of_time], label='Basal Rate', alpha=0.7, linestyle='-')
+#plt.plot(basal_rate_sans_nan_1D[:amount_of_time], label='Basal Rate', alpha=0.7, linestyle='-')
 plt.plot(aligned_sleep_analysis, label='Sleep Analysis', alpha=0.7, linestyle='--')
-plt.plot(aligned_sleep_time, label='Sleep Time', alpha=0.7, linestyle=':')
-plt.title('Comparison of Basal Rate, Sleep Analysis, and Sleep Time (First 1440 Minutes)')
+#plt.plot(aligned_sleep_time, label='Sleep Time', alpha=0.7, linestyle=':')
+plt.title('Plot of Sleep Analysis(First 1440 Minutes)')
 plt.ylabel('Values')
 plt.legend()
 plt.show()

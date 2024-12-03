@@ -1,7 +1,13 @@
 import sys 
-sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
-import data_processing
-from data_processing import process_categorical_data, process_numerical_data, calc_R
+import os
+
+#FOR ASYA TO EXECUTE
+#sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
+
+#FOR NOAH TO EXECUTE
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from SleepCycle.data_processing import process_categorical_data, process_numerical_data, calc_R
 import pandas as pd 
 import numpy as np 
 import matplotlib.pyplot as plt 
@@ -9,17 +15,31 @@ from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
 
+#FOR NOAH TO EXECUTE:
+# Get the directory of the current script
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Construct the full paths to the CSV files
+cbt_file_path = os.path.join(script_dir, "cbtarray.csv")
+hun_file_path = os.path.join(script_dir, "hungerarray.csv")
+
+# Load CSV into DataFrames
+df_cbt = pd.read_csv(cbt_file_path)
+df_hun = pd.read_csv(hun_file_path)
+
+#FOR ASYA TO EXECUTE
+'''
 # Load CSV into a DataFrame
 df_cbt = pd.read_csv("cbtarray.csv")
 df_hun = pd.read_csv("hungerarray.csv")
+'''
+
 
 # Convert to a NumPy array
 arr_cbt = df_cbt.to_numpy().flatten()
 arr_hun = df_hun.to_numpy().flatten()
 
 ys = np.arange(len(arr_cbt))
-
 
 time_vals = range(0, len(arr_cbt))
 
@@ -42,11 +62,8 @@ X = np.array([
     [np.mean(arr_hun)],
 ])
 
-
-
 # Process model matrix F, equivalent to A in math equations
 dt = 1  # 1 second time step
-
 
 F = np.array([
     [1, 0, 0],
