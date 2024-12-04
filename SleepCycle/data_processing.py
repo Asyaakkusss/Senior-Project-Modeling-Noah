@@ -80,8 +80,6 @@ def process_numerical_data(csv_string, column_of_interest):
     aligned_dataframe = pd.DataFrame({
         'value': interpolated_data
         })
-    
-    
 
     processed_data = aligned_dataframe.to_numpy().flatten()
     print(aligned_dataframe.columns)
@@ -148,16 +146,18 @@ def regularize_analysis():
 
     # Category mapping for the values in the csv
     category_mapping = {
-        "HKCategoryValueSleepAnalysisInBed": -2,
-        "HKCategoryValueSleepAnalysisAsleepREM": -3,
-        "HKCategoryValueSleepAnalysisAsleepDeep": -4,
-        "HKCategoryValueSleepAnalysisAsleepCore": -5,
+        "HKCategoryValueSleepAnalysisInBed": 2,
+        "HKCategoryValueSleepAnalysisAsleepREM": 3,
+        "HKCategoryValueSleepAnalysisAsleepDeep": 4,
+        "HKCategoryValueSleepAnalysisAsleepCore": 5,
         "HKCategoryValueSleepAnalysisAwake": 1,
         "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
     }
 
+    
     # Map categories to numeric values
     df_sa_original['value'] = df_sa_original['value'].map(category_mapping)
+    #df_sa_filtered = df_sa_original[df_sa_original['value'] != -2]
     
     #I don't think it's helpful to save the csv...
     #df_sa_original.to_csv('data/SleepAnalysis_label_data.csv', index=False)
@@ -192,86 +192,90 @@ def adapt_change(time_df: pd.DataFrame, data_name: str) -> pd.DataFrame:
 
     # Define time range
     start_time = pd.Timestamp('2023-07-18 23:04:52-04:00')
-    end_time = pd.Timestamp('2023-09-24 08:41:40 -0400')
+    end_time = pd.Timestamp('2023-07-24 23:11:16-04:00')
     common_time = pd.date_range(start=start_time, end=end_time, freq='s')
-    #common_time_list = common_time.to_list()
 
-    #iterator through the new dataframe
-    new_time = start_time
-    
+    print("Range of time_df.index:", time_df.index.min(), "to", time_df.index.max())
+    print("Range of common_time:", common_time.min(), "to", common_time.max())
+
+    #This is to calculate processed_sleep_analysis
+    '''
+    # Create the new DataFrame
     new_df = pd.DataFrame(index=common_time, columns=['value'])
+    filtered_time_df = time_df.loc[start_time:end_time]
 
-    print(time_df.loc[start_time])
-    print(new_df.loc[start_time])
+    # Extract the old timestamps and values
+    old_times = filtered_time_df.index  # Assumes 'end' is set as the index
+    old_values = filtered_time_df['value']
 
-    for (index, row), (_, next_row) in zip(time_df.loc[start_time:].iterrows(), time_df.loc[pd.Timestamp('2023-07-18 23:10:54-04:00')].iterrows()):
-        # Check for more than 8-hour gap, to separate sleep spans
-        if abs(index - new_time) <= [timedelta(seconds=1)]:
-            new_df.loc[new_time] = row
-            new_time += timedelta(seconds=1)
-            sleep_start = index
-        else:
-            sleep_end = row['end']
-
-        # Add final sleep span if exists
-        if sleep_start is not None:
-            results.append({
-                'source': df['source'].iloc[-1],
-                'time': sleep_start,
-                'end': sleep_end,
-                'value': (sleep_end - sleep_start).total_seconds() / 3600,
-            })
+    # Initialize iterators
+    old_time_index = 0
     
-    # Resample and aggregate data
-    time_df.sort_index(inplace=True)
-    resampled_df = time_df['value'].reindex(common_time, method='nearest')
+    # Loop through the new DataFrame
+    for new_time in new_df.index:
+        if old_time_index < len(old_times):
+            old_time = old_times[old_time_index]
+            old_value = old_values.iloc[old_time_index]
 
-    # Convert Series back to DataFrame
-    resampled_df = resampled_df.to_frame(name='value')
+            difference = abs(new_time - old_time)
+            print(f"new_time={new_time}, old_time={old_time}, difference={difference}, old_time_index={old_time_index}")
+            
+            # If the new time closely matches the old time, copy the value
+            if difference <= timedelta(seconds=1):
+                new_df.loc[new_time] = old_value
+                old_time_index += 1  # Move to the next old time
+            elif difference >= timedelta(hours=4):
+                # Large gap indicates awake state
+                new_df.loc[new_time] = 10
+            else:
+                # Smaller gap, propagate the last known value
+                new_df.loc[new_time] = old_value
+        else:
+            # Fill remaining times with NaN or a default value
+            new_df.loc[new_time] = float('nan')
 
-    output_file = f"processed_{data_name.lower().replace(' ', '_')}.csv"
-    resampled_df.to_csv(output_file, index=False)
 
-    # Align with the full time range, filling missing intervals with 0
-    aligned_df = resampled_df.reindex(common_time, fill_value=0)
+    new_df.to_csv("processed_sleep_analysis.csv")'''
+    
+    # Read the CSV into a DataFrame
+    data = pd.read_csv("processed_sleep_analysis.csv")
 
-    # Reset index for exporting
-    aligned_df.reset_index(inplace=True)
-    aligned_df.rename(columns={'index': 'start'}, inplace=True)
+    # Convert the 'Unnamed: 0' column to datetime and set it as the index
+    data['timestamp'] = pd.to_datetime(data['Unnamed: 0'], errors='coerce')
+    data.set_index('timestamp', inplace=True)
 
-    # Save the processed data to a CSV file
-    output_file = f"processed_{data_name.lower().replace(' ', '_')}.csv"
-    #aligned_df.to_csv(output_file, index=False)
-    print(f"Regularized data saved to {output_file}")
+    data.drop(columns=['Unnamed: 0'], inplace=True)
+
+    # Resample the data to 1-minute frequency, taking the mean value for each minute
+    minute_data = data.resample('T').mean()
 
     print(f"Regularizing {data_name}")
     print("Length of common_time:", len(common_time))
-    print("Length of processed analysis:", len(aligned_df))
-    print(aligned_df)
+    print("Length of processed analysis:", len(data))
 
-    return aligned_df
+    minute_data = minute_data.to_csv("minutes_processed_sleep_analysis.csv")
+
+    return minute_data
 
 def convert_1D():
-    #sleep_time_sans_nan = regularize_time()
-    #basal_rate_sans_nan = regularize_metabolism()
-    sleep_analysis_sans_nan = regularize_analysis()
 
     # Currently, becuase the different data sets have different number of nans, the data sizes are different, 
     # So we use the minimum length of all the data and use that size for all the arrays of data
 
     #Commenting this out temporarily because we only care about sleep analysis right now
-    '''
+    
     # Ensuring consistent length of the arrays
     min_length = min(len(basal_rate_sans_nan), len(sleep_analysis_sans_nan), len(sleep_time_sans_nan))
     basal_rate_sans_nan = basal_rate_sans_nan[:min_length]
     sleep_analysis_sans_nan = sleep_analysis_sans_nan[:min_length]
-    sleep_time_sans_nan = sleep_time_sans_nan[:min_length]'''
+    sleep_time_sans_nan = sleep_time_sans_nan[:min_length]
 
     # Convert to 1D arrays
-    #basal_rate_sans_nan_1D = np.array(basal_rate_sans_nan).flatten()
+    basal_rate_sans_nan_1D = np.array(basal_rate_sans_nan).flatten()
     sleep_analysis_sans_nan_1D = np.array(sleep_analysis_sans_nan).flatten()
-    #sleep_time_sans_nan_1D = np.array(sleep_time_sans_nan).flatten()
-            #basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D
+    sleep_time_sans_nan_1D = np.array(sleep_time_sans_nan).flatten()
+    #basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D
+
     return sleep_analysis_sans_nan_1D
 
-sleep_analysis = convert_1D()
+regularize_analysis()

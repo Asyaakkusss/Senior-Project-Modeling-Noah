@@ -6,8 +6,12 @@ col_to_extract = "value"
 import pandas as pd 
 import data_processing as dp
 
-#basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D
-sleep_analysis_sans_nan_1D = dp.convert_1D()
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the uploaded CSV to inspect the data structure
+file_path = 'minutes_processed_sleep_analysis.csv'
+df = pd.read_csv(file_path)
 
 '''
 #sys.path.append("F:\FALL 2024\Senior-Project-Modeling-Noah\CoreBodyTemp")
@@ -55,11 +59,15 @@ BE = convert_to_integer(basal_energy)
 # =================================================================================================================
 
 #Noah's sleep analysis plot
-amount_of_time = 613880
-aligned_sleep_analysis = sleep_analysis_sans_nan_1D[:amount_of_time]
-plt.plot(aligned_sleep_analysis, label='Sleep Analysis', alpha=0.7, linestyle='--')
+#amount_of_time = 613880
+#aligned_sleep_analysis = sleep_analysis_sans_nan_1D[:amount_of_time]
+
+# Plot the DataFrame directly
+plt.figure(figsize=(10, 5))
+df['value'].plot(label='Sleep Analysis', alpha=0.7, linestyle='--')
 plt.title('Plot of Sleep Analysis')
 plt.ylabel('Values')
+plt.xlabel('Time')
 plt.legend()
 plt.show()
 
