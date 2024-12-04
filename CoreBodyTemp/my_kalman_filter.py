@@ -228,9 +228,15 @@ time_series = time_series.tolist()
 xs_cbt = xs_cbt[indices]
 #time_series = pd.date_range(start="00:01", end="23:59", periods=len(xs_cbt))
 
-plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+#plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
+#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
 plt.xticks(rotation=45)
+
+locator = mdates.HourLocator(interval=2)  # ticks every 2 hours
+plt.gca().xaxis.set_major_locator(locator)
+formatter = mdates.DateFormatter('%H:%M')
+plt.gca().xaxis.set_major_formatter(formatter)
+plt.gca().set_xlim(start_time, end_time)
 
 residual_std_cbt = residual_std[:, 0]  # Extract standard deviation for CBT
 mse_cbt = mse[:, 0]  # Extract MSE for CBT
@@ -240,10 +246,10 @@ print("Mean Squared Error (MSE):", mse_cbt)
 
 
 plt.plot(time_series, xs_cbt, color = "#003071", label='Predicted CBT')
-plt.title('Predicted Core Body Temperature over Time')
-plt.xlabel('Time Steps')
-plt.ylabel('CBT Estimate')
-plt.legend()
+plt.title("Subject\'s Predicted Core Body Temperature Over 24 Hours")
+plt.xlabel('Time (Hours)')
+plt.ylabel('CBT Estimate (°F)')
+#plt.legend()
 '''
 # Plot Residuals
 plt.subplot(2, 1, 2)  # Second plot in the grid

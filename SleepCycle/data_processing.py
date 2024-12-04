@@ -4,7 +4,11 @@ import csv
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
-import graph_test
+import sys
+import os
+script_path = sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(script_path)
+#import graph_test
 from datetime import timedelta
 
 #from sklearn.preprocessing import LabelEncoder
@@ -278,4 +282,4 @@ def convert_1D():
 
     return sleep_analysis_sans_nan_1D
 
-regularize_analysis()
+#regularize_analysis()

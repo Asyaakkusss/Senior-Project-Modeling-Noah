@@ -195,26 +195,27 @@ for i in range(7,18):
 
     xs_cbt_filtered = xs_cbt[indices]
 
-    plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    locator = mdates.HourLocator(interval=2)  # ticks every 2 hours
+    plt.gca().xaxis.set_major_locator(locator)
+    formatter = mdates.DateFormatter('%H:%M')
+    plt.gca().xaxis.set_major_formatter(formatter)
+    plt.gca().set_xlim(start_time, end_time)
+
     plt.xticks(rotation=45)
 
 
-    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted SCN Activity')
-    plt.title('Predicted SCN over Time')
-    plt.xlabel('Time Steps')
+    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted SCN Activity', color = "#003071")
+    plt.title('Predicted SCN Activity over 24 Hours')
+    plt.xlabel('Time (Hours)')
     plt.ylabel('SCN Activity Estimate')
-    plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(script_dir,'ensemble_plot_pngs', f"ensemble_output_{start_time}_to_{end_time}_.png"))
     plt.clf()
     plt.cla()
 
-    pass
-
 plt.plot(ys_cbt, xs_cbt, label='Predicted Ensemble Levels')
 plt.title('Predicted Ensemble over Time')
-plt.xlabel('Time Steps')
+plt.xlabel('Time')
 plt.ylabel('Ensemble Estimate')
 plt.legend()
 

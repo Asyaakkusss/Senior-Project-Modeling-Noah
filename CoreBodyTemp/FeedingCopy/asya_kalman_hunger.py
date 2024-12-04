@@ -16,7 +16,7 @@ from filterpy.kalman import KalmanFilter
 import sys 
 sys.path.append(os.path.join(home_dir, "SleepCycle"))
 from data_processing import process_categorical_data, process_numerical_data, calc_R, calc_X
-from datetime import datetime
+from datetime import datetime, timedelta
 
 #preprocess the data 
 physical_csv_string = os.path.join(home_dir, "data/PhysicalEffort.csv")
@@ -186,10 +186,18 @@ print(f"first time series: {time_phys_rate[0]}")
 print(f"last time series: {time_phys_rate[-1]}")
 
 
+
+
 for i in range(8, 18):
-    print(len(xs_cbt))
     start_time = datetime(2024, 2, i, 0, 0)  # Example start time: 05:00
     end_time = datetime(2024, 2, i+1, 0, 0)
+
+    meal_times = [
+        datetime(2024, 2, i, 7, 30),  # 7:30 AM
+        datetime(2024, 2, i, 17, 0),  # 5:00 PM
+        datetime(2024, 2, i, 22, 0)   # 10:00 PM
+    ]
+
     
     indices = [i for i, t in enumerate(time_phys_rate) if start_time <= t <= end_time]
     time_series_df = pd.Series(time_phys_rate)
@@ -197,17 +205,36 @@ for i in range(8, 18):
     time_series_filtered = time_series_filtered.tolist()
 
     xs_cbt_filtered = xs_cbt[indices]
-
-
-    plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    #plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 2 hours
+    #plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
     plt.xticks(rotation=45)
 
+    
 
-    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted Hunger Levels')
-    plt.title('Predicted Hunger over Time')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Hunger Estimate')
+    locator = mdates.HourLocator(interval=2)  # ticks every 2 hours
+    plt.gca().xaxis.set_major_locator(locator)
+    formatter = mdates.DateFormatter('%H:%M')
+    plt.gca().xaxis.set_major_formatter(formatter)
+    plt.gca().set_xlim(start_time, end_time)
+
+   
+
+    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted Hunger Levels', color = "#003071")
+
+     #add vertical lines at meal_times
+    for i in range(0, len(meal_times)):
+        if(i == 0):
+            plt.axvline(x=meal_times[i], color='red', linestyle='--', linewidth=2, label=f'Meal Time')
+        else:
+            plt.axvline(x=meal_times[i], color='red', linestyle='--', linewidth=2)
+
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys())
+
+    plt.title('Subject\'s Predicted Hunger over 24 Hours')
+    plt.xlabel('Time (Hours)')
+    plt.ylabel('Hunger Level Estimate')
     plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(home_dir, "CoreBodyTemp/FeedingCopy/hunger_plots_pngs/", f"feeding_output_{start_time}_to_{end_time}_.png"))
