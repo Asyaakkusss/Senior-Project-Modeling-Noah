@@ -2,5 +2,8 @@ venv/
 .venv/
 
 kalman/
-/home/asyaakkus/Senior-Project-Modeling-Noah/data/predictions_cbt.csv
-/home/asyaakkus/Senior-Project-Modeling-Noah/CoreBodyTemp/FeedingCopy/predictions_hunger.csv
+data/predictions_cbt.csv
+CoreBodyTemp/FeedingCopy/predictions_hunger.csv
+
+Ensemble/cbtarray.csv
+Ensemble/ensemble_output.png
