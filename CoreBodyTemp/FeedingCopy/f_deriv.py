@@ -74,6 +74,7 @@ plt.legend()
 plt.grid(True)
 plt.title("Original vs. Reconstructed Signals for Sleep")
 plt.savefig("correlation_sleep.png")
+plt.show()
 
 
 
