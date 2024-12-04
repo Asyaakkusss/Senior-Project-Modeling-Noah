@@ -1,6 +1,6 @@
 import sys 
 import os
-
+from datetime import datetime
 #FOR ASYA TO EXECUTE
 #sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
 
@@ -11,6 +11,7 @@ from SleepCycle.data_processing import process_categorical_data, process_numeric
 import pandas as pd 
 import numpy as np 
 import matplotlib.pyplot as plt 
+import matplotlib.dates as mdates
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
@@ -23,10 +24,12 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 cbt_file_path = os.path.join(script_dir, "cbtarray.csv")
 hun_file_path = os.path.join(script_dir, "hungerarray.csv")
 
+
 # Load CSV into DataFrames
 df_cbt = pd.read_csv(cbt_file_path)
 df_hun = pd.read_csv(hun_file_path)
-
+df_time = pd.read_csv(os.path.join(script_dir, "timearray.csv"), parse_dates=['Datetime'])
+print(df_time['Datetime'].dtype)
 #FOR ASYA TO EXECUTE
 '''
 # Load CSV into a DataFrame
@@ -38,6 +41,9 @@ df_hun = pd.read_csv("hungerarray.csv")
 # Convert to a NumPy array
 arr_cbt = df_cbt.to_numpy().flatten()
 arr_hun = df_hun.to_numpy().flatten()
+arr_time = df_time.to_numpy().flatten()
+
+print(type(arr_time[0]))
 
 ys = np.arange(len(arr_cbt))
 
@@ -79,7 +85,7 @@ def make_F(theta):
 
 # Measurement noise covariance matrix R. Basically what we did for P before. Little goof 
 R = calc_R([arr_cbt, arr_hun])
-print(R)
+#print(R)
 
 # Two options for Q (process noise covariance)
 Q_filterpy = Q_discrete_white_noise(dim=3, dt=1., var=7)
@@ -159,7 +165,7 @@ xs_reshaped = xs.reshape(14999, 3)
 
 xs_cbt = xs_reshaped[:15000, 0]
 ys_cbt = np.arange(len(xs_cbt))
-
+time_series = arr_time[:15000]
 
 # Calculate Standard Deviation of Residuals and MSE
 residual_std = np.std(residuals, axis=0)
@@ -170,6 +176,41 @@ mse_cbt = mse[:, 0]  # Extract MSE for CBT
 
 print("Standard Deviation of Residuals:", residual_std_cbt)
 print("Mean Squared Error (MSE):", mse_cbt)
+
+print(f"time_series[0]: {time_series[0]}")
+print(f"time_series[-1]: {time_series[-1]}")
+
+for i in range(7,18):
+    start_time = datetime(2023, 7, i, 0, 0)  # Example start time: 05:00
+    end_time = datetime(2023, 7, i+1, 0, 0)
+
+    start_time = np.datetime64(start_time)
+    end_time = np.datetime64(end_time)
+
+    
+    indices = [i for i, t in enumerate(time_series) if start_time <= t <= end_time]
+    time_series_df = pd.Series(time_series)
+    time_series_filtered = time_series_df.iloc[indices]
+    time_series_filtered = time_series_filtered.tolist()
+
+    xs_cbt_filtered = xs_cbt[indices]
+
+    plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    plt.xticks(rotation=45)
+
+
+    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted SCN Activity')
+    plt.title('Predicted SCN over Time')
+    plt.xlabel('Time Steps')
+    plt.ylabel('SCN Activity Estimate')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(script_dir,'ensemble_plot_pngs', f"ensemble_output_{start_time}_to_{end_time}_.png"))
+    plt.clf()
+    plt.cla()
+
+    pass
 
 plt.plot(ys_cbt, xs_cbt, label='Predicted Ensemble Levels')
 plt.title('Predicted Ensemble over Time')
