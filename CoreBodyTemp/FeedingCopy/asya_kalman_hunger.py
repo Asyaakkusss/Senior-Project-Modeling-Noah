@@ -157,7 +157,7 @@ def run_kalman_filter_hunger(X, P, R, Q, F, H, zs, n_steps):
 
     return xs_rot, cov, residuals
 
-# Run the Kalman filter with your data
+
 xs, Ps, residuals = run_kalman_filter_hunger(X, P, R, Q_filterpy, F, H, zs, n_steps)
 
 # xs now contains state estimates, including hunger estimates over time
@@ -170,6 +170,7 @@ xs_reshaped = xs.reshape(302171, 3)
 xs_cbt = xs_reshaped[:15000, 0]
 time_phys_rate = time_phys_rate[:15000]
 ys_cbt = np.arange(len(xs_cbt))
+
 np.savetxt(os.path.join(home_dir, "Ensemble/hungerarray.csv"),xs_cbt)
 
 # Calculate Standard Deviation of Residuals and MSE
@@ -181,32 +182,39 @@ mse_cbt = mse[:, 0]  # Extract MSE for CBT
 
 print("Standard Deviation of Residuals:", residual_std_cbt)
 print("Mean Squared Error (MSE):", mse_cbt)
-
 print(f"first time series: {time_phys_rate[0]}")
 print(f"last time series: {time_phys_rate[-1]}")
 
 
-start_time = datetime(2024, 2, 10, 0, 0)  # Example start time: 05:00
-end_time = datetime(2024, 2, 11, 0, 0)
-indices = [i for i, t in enumerate(time_phys_rate) if start_time <= t <= end_time]
-time_series_df = pd.Series(time_phys_rate)
-time_series = time_series_df.iloc[indices]
-time_series = time_series.tolist()
+for i in range(8, 18):
+    print(len(xs_cbt))
+    start_time = datetime(2024, 2, i, 0, 0)  # Example start time: 05:00
+    end_time = datetime(2024, 2, i+1, 0, 0)
+    
+    indices = [i for i, t in enumerate(time_phys_rate) if start_time <= t <= end_time]
+    time_series_df = pd.Series(time_phys_rate)
+    time_series_filtered = time_series_df.iloc[indices]
+    time_series_filtered = time_series_filtered.tolist()
+
+    xs_cbt_filtered = xs_cbt[indices]
 
 
-xs_cbt = xs_cbt[indices]
+    plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    plt.xticks(rotation=45)
 
 
-plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-plt.xticks(rotation=45)
+    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted Hunger Levels')
+    plt.title('Predicted Hunger over Time')
+    plt.xlabel('Time Steps')
+    plt.ylabel('Hunger Estimate')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(home_dir, "CoreBodyTemp/FeedingCopy/hunger_plots_pngs/", f"feeding_output_{start_time}_to_{end_time}_.png"))
+    plt.clf()
+    plt.cla()
 
 
-plt.plot(time_series, xs_cbt, label='Predicted Hunger Levels')
-plt.title('Predicted Hunger over Time')
-plt.xlabel('Time Steps')
-plt.ylabel('Hunger Estimate')
-plt.legend()
 '''
 # Plot Residuals
 plt.subplot(2, 1, 2)  # Second plot in the grid
@@ -218,6 +226,5 @@ plt.legend()
 '''
 
 # Show the final plot with both graphs
-plt.tight_layout()
-plt.savefig('feeding_output.png')
+#plt.savefig('feeding_output.png')
 plt.show()
