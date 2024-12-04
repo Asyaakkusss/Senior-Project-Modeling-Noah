@@ -4,6 +4,9 @@ import csv
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
+import graph_test
+from datetime import timedelta
+
 #from sklearn.preprocessing import LabelEncoder
 
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
@@ -145,10 +148,10 @@ def regularize_analysis():
 
     # Category mapping for the values in the csv
     category_mapping = {
-        "HKCategoryValueSleepAnalysisInBed": 2,
-        "HKCategoryValueSleepAnalysisAsleepREM": 3,
-        "HKCategoryValueSleepAnalysisAsleepDeep": 4,
-        "HKCategoryValueSleepAnalysisAsleepCore": 5,
+        "HKCategoryValueSleepAnalysisInBed": -2,
+        "HKCategoryValueSleepAnalysisAsleepREM": -3,
+        "HKCategoryValueSleepAnalysisAsleepDeep": -4,
+        "HKCategoryValueSleepAnalysisAsleepCore": -5,
         "HKCategoryValueSleepAnalysisAwake": 1,
         "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
     }
@@ -157,7 +160,7 @@ def regularize_analysis():
     df_sa_original['value'] = df_sa_original['value'].map(category_mapping)
     
     #I don't think it's helpful to save the csv...
-    df_sa_original.to_csv('data/SleepAnalysis_label_data.csv', index=False)
+    #df_sa_original.to_csv('data/SleepAnalysis_label_data.csv', index=False)
     #df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
 
     # Now we can work with the date time 
@@ -167,55 +170,90 @@ def regularize_analysis():
     #df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
     
     # convert to fit ranges
-    df_sa = adapt_change(df_sa_original, "Sleep_Analysis")
+    df_sa = adapt_change(df_sa_original, "Sleep Analysis")
     
     return df_sa
 
-def adapt_change(time_df: pd.DataFrame, data_name) -> pd.DataFrame:
-    #the datetime values will be used 
-    time_df.set_index('start', inplace=True)
+def adapt_change(time_df: pd.DataFrame, data_name: str) -> pd.DataFrame:
+    # Convert 'start' to datetime and set it as the index
+    time_df['end'] = pd.to_datetime(time_df['end'], errors='coerce')
+    time_df.set_index('end', inplace=True)
 
+    # Drop duplicate indices
     if time_df.index.duplicated().any():
         time_df = time_df[~time_df.index.duplicated(keep='first')]
 
-    start_time = pd.Timestamp('2023-07-07 01:08:27-0400')
-    end_time = pd.Timestamp('2024-09-05 08:27:27-0400')
 
-    #normalize them to a constant frequency 
-    common_time = pd.date_range(start=start_time, 
-                                end=end_time, 
-                                freq='min')
+    # Keep only the 'value' column as a DataFrame
+    time_df = time_df[['value']]
 
-    #align values with the times 
-    print("Original time_df:\n", time_df.head())
-    interpolated_df: pd.DataFrame = time_df['value'].reindex(common_time).interpolate()
-    #print("After reindex and interpolate:\n", interpolated_df.head())
+    time_df.to_csv('data/SleepAnalysis_label_data.csv')
+    print(time_df)
 
-    # Ensure both are sorted before merging
-    time_df = time_df.sort_index()
-    common_time_df = pd.DataFrame(index=common_time)
+    # Define time range
+    start_time = pd.Timestamp('2023-07-18 23:04:52-04:00')
+    end_time = pd.Timestamp('2023-09-24 08:41:40 -0400')
+    common_time = pd.date_range(start=start_time, end=end_time, freq='s')
+    #common_time_list = common_time.to_list()
 
-    aligned_df = pd.merge_asof(
-        common_time_df, time_df, left_index=True, right_index=True, direction='nearest'
-    )
+    #iterator through the new dataframe
+    new_time = start_time
+    
+    new_df = pd.DataFrame(index=common_time, columns=['value'])
 
-    aligned_df = pd.DataFrame({
-    'value': time_df['value']
-    }, index=time_df.index)
+    print(time_df.loc[start_time])
+    print(new_df.loc[start_time])
 
-    processed_df = aligned_df.dropna()
-    #df_sans_nan = processed_df.to_numpy().flatten()
+    for (index, row), (_, next_row) in zip(time_df.loc[start_time:].iterrows(), time_df.loc[pd.Timestamp('2023-07-18 23:10:54-04:00')].iterrows()):
+        # Check for more than 8-hour gap, to separate sleep spans
+        if abs(index - new_time) <= [timedelta(seconds=1)]:
+            new_df.loc[new_time] = row
+            new_time += timedelta(seconds=1)
+            sleep_start = index
+        else:
+            sleep_end = row['end']
+
+        # Add final sleep span if exists
+        if sleep_start is not None:
+            results.append({
+                'source': df['source'].iloc[-1],
+                'time': sleep_start,
+                'end': sleep_end,
+                'value': (sleep_end - sleep_start).total_seconds() / 3600,
+            })
+    
+    # Resample and aggregate data
+    time_df.sort_index(inplace=True)
+    resampled_df = time_df['value'].reindex(common_time, method='nearest')
+
+    # Convert Series back to DataFrame
+    resampled_df = resampled_df.to_frame(name='value')
+
+    output_file = f"processed_{data_name.lower().replace(' ', '_')}.csv"
+    resampled_df.to_csv(output_file, index=False)
+
+    # Align with the full time range, filling missing intervals with 0
+    aligned_df = resampled_df.reindex(common_time, fill_value=0)
+
+    # Reset index for exporting
+    aligned_df.reset_index(inplace=True)
+    aligned_df.rename(columns={'index': 'start'}, inplace=True)
+
+    # Save the processed data to a CSV file
+    output_file = f"processed_{data_name.lower().replace(' ', '_')}.csv"
+    #aligned_df.to_csv(output_file, index=False)
+    print(f"Regularized data saved to {output_file}")
 
     print(f"Regularizing {data_name}")
     print("Length of common_time:", len(common_time))
-    print("Length of processed analysis:", len(processed_df))
-    print(processed_df)
-    processed_df.to_csv("processed_sleep_analysis")
-    return processed_df
+    print("Length of processed analysis:", len(aligned_df))
+    print(aligned_df)
+
+    return aligned_df
 
 def convert_1D():
-    sleep_time_sans_nan = regularize_time()
-    basal_rate_sans_nan = regularize_metabolism()
+    #sleep_time_sans_nan = regularize_time()
+    #basal_rate_sans_nan = regularize_metabolism()
     sleep_analysis_sans_nan = regularize_analysis()
 
     # Currently, becuase the different data sets have different number of nans, the data sizes are different, 
@@ -230,9 +268,10 @@ def convert_1D():
     sleep_time_sans_nan = sleep_time_sans_nan[:min_length]'''
 
     # Convert to 1D arrays
-    basal_rate_sans_nan_1D = np.array(basal_rate_sans_nan).flatten()
+    #basal_rate_sans_nan_1D = np.array(basal_rate_sans_nan).flatten()
     sleep_analysis_sans_nan_1D = np.array(sleep_analysis_sans_nan).flatten()
-    sleep_time_sans_nan_1D = np.array(sleep_time_sans_nan).flatten()
+    #sleep_time_sans_nan_1D = np.array(sleep_time_sans_nan).flatten()
+            #basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D
+    return sleep_analysis_sans_nan_1D
 
-    return basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D
-
+sleep_analysis = convert_1D()

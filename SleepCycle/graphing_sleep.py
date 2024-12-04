@@ -6,12 +6,13 @@ col_to_extract = "value"
 import pandas as pd 
 import data_processing as dp
 
+#basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D
+sleep_analysis_sans_nan_1D = dp.convert_1D()
 
-basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D = dp.convert_1D()
 '''
 #sys.path.append("F:\FALL 2024\Senior-Project-Modeling-Noah\CoreBodyTemp")
 #from my_kalman_filter import n_steps
-'''
+
 # Start off with Asya's my_kalman_filter.py steps: load, convert from array to integer, then process the data
 
 # Load in data from PureSleepTime.csv, HKCategoryTypeIdentifierSleepAnalysis.csv, BasalMetabolicRate.csv
@@ -61,7 +62,7 @@ plt.title('Plot of Sleep Analysis')
 plt.ylabel('Values')
 plt.legend()
 plt.show()
-'''
+
 #Noah's combined plot
 '''
 # Align sleep data with Kalman filter steps

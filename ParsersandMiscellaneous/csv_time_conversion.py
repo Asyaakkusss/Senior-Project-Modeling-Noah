@@ -54,7 +54,7 @@ def aggregate_data_by_interval(file, interval):
                 sleep_end = row['end']
             else:
                 # Check for more than 8-hour gap, to separate sleep spans
-                if row['start'] - sleep_end > time_delta:
+                if row['start'] - sleep_end > [time_delta]:
                     results.append({
                         'source': row['source'],  # Source from current row
                         'time': sleep_start,
