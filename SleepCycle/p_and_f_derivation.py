@@ -12,14 +12,15 @@ from data_processing import process_categorical_data, process_numerical_data
 
 #________________________________________________________data analysis cleaned up______________________________________________________________#
 #strings for data analysis 
-sleep_analysis_categorical_fp = '/home/asyaakkus/Senior-Project-Modeling-Noah/data/HKCategoryTypeIdentifierSleepAnalysis.csv'
+# sleep_analysis_categorical_fp = '/home/asyaakkus/Senior-Project-Modeling-Noah/data/HKCategoryTypeIdentifierSleepAnalysis.csv'
+# sleep_analysis_fp = 'data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv'
+# pure_sleep_time_fp = '/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv'
+# basal_energy_fp = '/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv'
 
-sleep_analysis_fp = 'data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv'
-
-pure_sleep_time_fp = '/home/asyaakkus/Senior-Project-Modeling-Noah/data/PureSleepTime.csv'
-
-basal_energy_fp = '/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv'
-
+sleep_analysis_categorical_fp = '../data/HKCategoryTypeIdentifierSleepAnalysis.csv'
+sleep_analysis_fp = '../data/HKCategoryTypeIdentifierSleepAnalysis_processed.csv'
+pure_sleep_time_fp = '../data/PureSleepTime.csv'
+basal_energy_fp = '../data/BasalEnergyBurned.csv'
 
 #array of category mapping 
 # Category mapping for the values in the csv

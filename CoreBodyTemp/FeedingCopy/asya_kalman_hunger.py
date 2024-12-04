@@ -12,7 +12,8 @@ from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
 import sys 
 # sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
-from SleepCycle.data_processing import process_categorical_data, process_numerical_data, calc_R, calc_X
+sys.path.append("../../SleepCycle/")
+from data_processing import process_categorical_data, process_numerical_data, calc_R, calc_X
 
 
 #preprocess the data 
@@ -54,8 +55,8 @@ P = np.array([
 
 X = np.array([
     [1],
-    [np.mean(processed_basal_rate[650:])],
-    [np.mean(processed_phys_rate[650:])],
+    [np.mean(processed_basal_rate[:])],
+    [np.mean(processed_phys_rate[:])],
 ])
 
 
@@ -158,7 +159,8 @@ xs_reshaped = xs.reshape(302171, 3)
 
 xs_cbt = xs_reshaped[:15000, 0]
 ys_cbt = np.arange(len(xs_cbt))
-np.savetxt("/home/asyaakkus/Senior-Project-Modeling-Noah/Ensemble/hungerarray.csv",xs_cbt)
+# np.savetxt("/home/asyaakkus/Senior-Project-Modeling-Noah/Ensemble/hungerarray.csv",xs_cbt)
+np.savetxt("../../Ensemble/hungerarray.csv",xs_cbt)
 
 
 # Calculate Standard Deviation of Residuals and MSE
@@ -174,7 +176,7 @@ print("Mean Squared Error (MSE):", mse_cbt)
 plt.plot(ys_cbt, xs_cbt, label='Predicted Hunger Levels')
 plt.title('Predicted Hunger over Time')
 plt.xlabel('Time Steps')
-plt.ylabel('CBT Estimate')
+plt.ylabel('Hunger Estimate')
 plt.legend()
 '''
 # Plot Residuals
