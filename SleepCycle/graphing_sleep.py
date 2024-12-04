@@ -8,7 +8,7 @@ import data_processing as dp
 
 
 basal_rate_sans_nan_1D, sleep_analysis_sans_nan_1D, sleep_time_sans_nan_1D = dp.convert_1D()
-
+'''
 #sys.path.append("F:\FALL 2024\Senior-Project-Modeling-Noah\CoreBodyTemp")
 #from my_kalman_filter import n_steps
 '''
@@ -53,7 +53,17 @@ BE = convert_to_integer(basal_energy)
 # =================================================================================================================
 # =================================================================================================================
 
-
+#Noah's sleep analysis plot
+amount_of_time = 613880
+aligned_sleep_analysis = sleep_analysis_sans_nan_1D[:amount_of_time]
+plt.plot(aligned_sleep_analysis, label='Sleep Analysis', alpha=0.7, linestyle='--')
+plt.title('Plot of Sleep Analysis')
+plt.ylabel('Values')
+plt.legend()
+plt.show()
+'''
+#Noah's combined plot
+'''
 # Align sleep data with Kalman filter steps
 #used to be 612655
 amount_of_time = 1440
@@ -71,6 +81,10 @@ plt.title('Plot of Sleep Analysis(First 1440 Minutes)')
 plt.ylabel('Values')
 plt.legend()
 plt.show()
+'''
+
+#Maisoon's plot
+
 '''
 # Create the plot
 fig, ax1 = plt.subplots(figsize=(12, 6))

@@ -153,7 +153,7 @@ def regularize_analysis():
         "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
     }
 
-    # Map categories to numeric valuesby one hot encoding
+    # Map categories to numeric values
     df_sa_original['value'] = df_sa_original['value'].map(category_mapping)
     
     #I don't think it's helpful to save the csv...
@@ -161,13 +161,13 @@ def regularize_analysis():
     #df_sa_original.to_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv', index=False)  # save to new csv file
 
     # Now we can work with the date time 
-    df_sa_filtered = df_sa_original[df_sa_original['value'] != 2]
+    #df_sa_filtered = df_sa_original[df_sa_original['value'] != 2]
     # Read the new processed csv file --- change the names for df here to represent sleep analysis -> df_sa
     #df_sa = pd.read_csv('data/SleepAnalysis_label_data.csv')
     #df_sa = pd.read_csv('F:\FALL 2024\Senior-Project-Modeling-Noah\data\SleepAnalysis_label_data.csv')
     
     # convert to fit ranges
-    df_sa = adapt_change(df_sa_filtered, "Sleep_Analysis")
+    df_sa = adapt_change(df_sa_original, "Sleep_Analysis")
     
     return df_sa
 
@@ -188,7 +188,7 @@ def adapt_change(time_df: pd.DataFrame, data_name) -> pd.DataFrame:
 
     #align values with the times 
     print("Original time_df:\n", time_df.head())
-    #interpolated_df: pd.DataFrame = time_df['value'].reindex(common_time).interpolate()
+    interpolated_df: pd.DataFrame = time_df['value'].reindex(common_time).interpolate()
     #print("After reindex and interpolate:\n", interpolated_df.head())
 
     # Ensure both are sorted before merging
@@ -206,24 +206,28 @@ def adapt_change(time_df: pd.DataFrame, data_name) -> pd.DataFrame:
     processed_df = aligned_df.dropna()
     #df_sans_nan = processed_df.to_numpy().flatten()
 
+    print(f"Regularizing {data_name}")
     print("Length of common_time:", len(common_time))
     print("Length of processed analysis:", len(processed_df))
     print(processed_df)
+    processed_df.to_csv("processed_sleep_analysis")
     return processed_df
 
 def convert_1D():
     sleep_time_sans_nan = regularize_time()
-    sleep_analysis_sans_nan = regularize_analysis()
     basal_rate_sans_nan = regularize_metabolism()
+    sleep_analysis_sans_nan = regularize_analysis()
 
     # Currently, becuase the different data sets have different number of nans, the data sizes are different, 
     # So we use the minimum length of all the data and use that size for all the arrays of data
 
+    #Commenting this out temporarily because we only care about sleep analysis right now
+    '''
     # Ensuring consistent length of the arrays
     min_length = min(len(basal_rate_sans_nan), len(sleep_analysis_sans_nan), len(sleep_time_sans_nan))
     basal_rate_sans_nan = basal_rate_sans_nan[:min_length]
     sleep_analysis_sans_nan = sleep_analysis_sans_nan[:min_length]
-    sleep_time_sans_nan = sleep_time_sans_nan[:min_length]
+    sleep_time_sans_nan = sleep_time_sans_nan[:min_length]'''
 
     # Convert to 1D arrays
     basal_rate_sans_nan_1D = np.array(basal_rate_sans_nan).flatten()
