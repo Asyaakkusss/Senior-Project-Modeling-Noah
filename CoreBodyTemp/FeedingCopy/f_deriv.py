@@ -74,7 +74,7 @@ plt.legend()
 plt.grid(True)
 plt.title("Original vs. Reconstructed Signals for Sleep")
 plt.savefig("correlation_sleep.png")
-plt.show()
+# plt.show()
 
 
 
@@ -95,9 +95,12 @@ matrix_cell = np.mean(pe_gradient/bmr_gradient)
 
 #find derivative of BMR w respect to pe
 matrix_cell_1 = np.mean(bmr_gradient/pe_gradient)
+print()
 print("pe w respect to BMR", matrix_cell)
 print("BMR w respect pe", matrix_cell_1)
 #noah i love you pls figure out which cell is which. idk which one is hr w respect to bmr and which one is bm w respect to hr. as in cell (2, 3) vs (3, 2). 
 #non matlab order this is matlab slander. 
 # i have made the decision to make the 1-3 of the first row and columns zero becuase we simply are just girls and don't know (fairy and sparkle emojis)
 #just slap dt in front of the constants I have produced. its not much but it is honest work 
+
+plt.show()
