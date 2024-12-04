@@ -8,14 +8,17 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
-sys.path.append("./SleepCycle")
+# sys.path.append("./SleepCycle")
+sys.path.append("../../SleepCycle/")
 from data_processing import process_categorical_data, process_numerical_data
 from scipy.optimize import curve_fit
 
 
 #preprocess the data 
-phys_rate_csv_string = "data/PhysicalEffort.csv"
-basal_rate_csv_string = "data/BasalEnergyBurned.csv"
+# phys_rate_csv_string = "data/PhysicalEffort.csv"
+# basal_rate_csv_string = "data/BasalEnergyBurned.csv"
+phys_rate_csv_string = "../../data/PhysicalEffort.csv"
+basal_rate_csv_string = "../../data/BasalEnergyBurned.csv"
 col_interest = 'start'
 processed_phys_rate = process_numerical_data(phys_rate_csv_string, col_interest)
 processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interest)
