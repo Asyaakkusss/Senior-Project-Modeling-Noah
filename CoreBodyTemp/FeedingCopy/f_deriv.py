@@ -37,11 +37,7 @@ processed_phys_rate = processed_phys_rate[:min_length]
 time = np.arange(0, len(processed_basal_rate))
 
 #Subtract 100 to find crossings around y=12.5
-print()
-print("processed phys rate")
-print(processed_phys_rate)
-print()
-phys_rate_shifted = processed_phys_rate - 2.5
+phys_rate_shifted = processed_phys_rate - 1.5
 
 # Find hundred-crossings (where the data crosses 100, or the middle of one oscillation)
 hundred_crossings = np.where(np.diff(np.sign(phys_rate_shifted)))[0]
@@ -60,7 +56,7 @@ y = 5.5 * np.cos(2 * np.pi * f_h * t_h / N_h) + 7
 
 #parameters for basal metabolic rate
 N_b= len(time)
-f_b = 368
+f_b = 270#368
 t_b= time 
 
 #this is the estimate equation for basal metabolic rate 
@@ -76,8 +72,8 @@ plt.xlabel("Time")
 plt.ylabel("Value")
 plt.legend()
 plt.grid(True)
-plt.title("Original vs. Reconstructed Signals for Sleep")
-plt.savefig("correlation_sleep.png")
+plt.title("Original vs. Reconstructed Signals for Feeding")
+plt.savefig("correlation_feeding.png")
 # plt.show()
 
 

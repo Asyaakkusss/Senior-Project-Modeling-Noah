@@ -50,13 +50,13 @@ zs = np.column_stack((processed_basal_rate, processed_phys_rate))
 
 P = np.array([
         [1, 0, 0], #hunger cycle 
-        [0, 22, 0], #BMR
-        [0, 0, 12.5], #PE
+        [0, 22, 0], #BMR        [0, 22, 0]
+        [0, 0, 12.5], #PE       [0, 0, 12.5]
     ])
 # Initial state X (based on means of X)
 
 X = np.array([
-    [1],
+    [10],
     [np.mean(processed_basal_rate[:])],
     [np.mean(processed_phys_rate[:])],
 ])
@@ -66,11 +66,14 @@ X = np.array([
 # Process model matrix F, equivalent to A in math equations
 dt = 1  # 1 second time step
 
-
+# const_1 = 0.167489 default values
+# const_2 = -1.52003
+const_1 = 0.167489
+const_2 = -1.52003
 F = np.array([
     [1, 0, 0],
-    [0, 1, 0.167489*np.cos(dt)],
-    [0, -1.52003*np.cos(dt), 1],
+    [0, 1, const_1*np.cos(dt)],
+    [0, const_2*np.cos(dt), 1],
 ])
 
 def make_F(theta):
@@ -94,9 +97,14 @@ Q_manual = np.array([
 
 # Measurement matrix H (maps state to measurement)
 H = np.array([
-    [0, 1, 0],  # basal rate mapping
-    [0, 0, 1],  # phys rate mapping 
+    [0, 0.5, 0.5],  # basal rate mapping 
+    [0, 0.75, 1],  # phys rate mapping 
 ])
+
+# H = np.array([
+#     [0, 1, 0],  # basal rate mapping 
+#     [0, 0, 1],  # phys rate mapping 
+# ])
 
 # Kalman filter initialization
 def initialize_kalman_filter(X, P, R, Q, F, H):
@@ -152,7 +160,7 @@ def run_kalman_filter_hunger(X, P, R, Q, F, H, zs, n_steps):
 # Run the Kalman filter with your data
 xs, Ps, residuals = run_kalman_filter_hunger(X, P, R, Q_filterpy, F, H, zs, n_steps)
 
-# xs now contains state estimates, including core body temperature estimates over time
+# xs now contains state estimates, including hunger estimates over time
 print(type(xs))
 print(np.shape(xs))
 
