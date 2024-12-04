@@ -20,8 +20,8 @@ from scipy.optimize import curve_fit
 phys_rate_csv_string = "../../data/PhysicalEffort.csv"
 basal_rate_csv_string = "../../data/BasalEnergyBurned.csv"
 col_interest = 'start'
-processed_phys_rate = process_numerical_data(phys_rate_csv_string, col_interest)
-processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interest)
+processed_phys_rate, time_phys_rate  = process_numerical_data(phys_rate_csv_string, col_interest)
+processed_basal_rate, time_basal_rate  = process_numerical_data(basal_rate_csv_string, col_interest)
 
 #the three arrays have null values, so we crop the nulls out to leave as much valid data as possible  
 processed_phys_rate = processed_phys_rate[612:]
@@ -37,6 +37,10 @@ processed_phys_rate = processed_phys_rate[:min_length]
 time = np.arange(0, len(processed_basal_rate))
 
 #Subtract 100 to find crossings around y=12.5
+print()
+print("processed phys rate")
+print(processed_phys_rate)
+print()
 phys_rate_shifted = processed_phys_rate - 2.5
 
 # Find hundred-crossings (where the data crosses 100, or the middle of one oscillation)
