@@ -1,6 +1,7 @@
 import numpy as np 
 import csv 
 import matplotlib.pyplot as plt 
+import matplotlib.dates as mdates
 import os
 import sys
 col_to_extract = "value"
@@ -8,12 +9,14 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
-sys.path.append("../SleepCycle")
+sys.path.append("/Users/monugoel/Desktop/CSDS_395/SleepCycle")
 from data_processing import process_categorical_data, process_numerical_data, calc_R
+from datetime import datetime
 
 
 #extract heart rate data 
-home_dir = "F:/FALL 2024/Senior-Project-Modeling-Noah/data"
+home_dir = "/Users/monugoel/Desktop/CSDS_395/"
+#Asya change this to: /home/asyaakkus/Senior-Project-Modeling-Noah/
 
 '''
 we find the P matrix by taking the variance of each of the arrays at consistent time stamps. for now, we will just focus on 
@@ -34,18 +37,19 @@ RR last timestamp:  [Timestamp('2024-09-05 08:27:27-0400', tz='UTC-04:00') 11.0]
 
 '''
 #preprocess the data 
-resp_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/RespiratoryRate.csv"
-heart_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/HeartRate.csv"
-basal_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
+resp_rate_csv_string = os.path.join(home_dir, "data/RespiratoryRate.csv")
+heart_rate_csv_string = os.path.join(home_dir, "data/HeartRate.csv")
+basal_rate_csv_string = os.path.join(home_dir, "data/BasalEnergyBurned.csv")
 col_interest = 'start'
-processed_respiratory = process_numerical_data(resp_rate_csv_string, col_interest)
-processed_heart_rate = process_numerical_data(heart_rate_csv_string, col_interest)
-processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interest)
+processed_respiratory, time_series_resp = process_numerical_data(resp_rate_csv_string, col_interest)
+processed_heart_rate, time_series_hr = process_numerical_data(heart_rate_csv_string, col_interest)
+processed_basal_rate, time_series_bsl = process_numerical_data(basal_rate_csv_string, col_interest)
 
 #the three arrays have null values, so we crop the nulls out to leave as much valid data as possible  
 processed_respiratory = processed_respiratory[612:]
 processed_heart_rate = processed_heart_rate[612:]
 processed_basal_rate = processed_basal_rate[612:]
+time_series_resp = time_series_resp[612:]
 
 #thr three arrays are now different lengths, so we find the minimum length and cut off the maximum index of an array at that minimum length 
 min_length = min(len(processed_respiratory), len(processed_heart_rate), len(processed_basal_rate))
@@ -54,13 +58,17 @@ min_length = min(len(processed_respiratory), len(processed_heart_rate), len(proc
 processed_basal_rate = processed_basal_rate[:min_length]
 processed_heart_rate = processed_heart_rate[:min_length]
 processed_respiratory = processed_respiratory[:min_length]
+time_series_resp = time_series_resp[:min_length]
+
+time_series_resp = [t.replace(tzinfo=None) for t in time_series_resp]
 
 
 time_vals = range(0, len(processed_basal_rate))
 
 # Number of time steps based on your data length
 n_steps = len(processed_basal_rate)
-print("N steps: ", n_steps)
+
+
 
 # Create zs matrix: (n_steps, 3) where each row corresponds to measurements at one time step
 zs = np.column_stack((processed_basal_rate, processed_heart_rate, processed_respiratory))
@@ -83,7 +91,7 @@ P = np.array([
 
 # Initial state X (based on means of X)
 X = np.array([
-    [97],
+    [99],
     [np.mean(processed_basal_rate[650:])],
     [np.mean(processed_heart_rate[650:])],
     [np.mean(processed_respiratory[650:])],
@@ -195,18 +203,34 @@ print(np.shape(xs))
 
 
 xs_reshaped = xs.reshape(612655, 4)
-
 #Removed this line because it creates an inordinately large file
 #np.savetxt(os.path.join(home_dir, "predictions_cbt.csv"), xs_reshaped, delimiter=",")
 
 xs_cbt = xs_reshaped[:15000, 0]
+time_series_resp = time_series_resp[:15000]
+
 ys_cbt = np.arange(len(xs_cbt))
 
-np.savetxt("/home/asyaakkus/Senior-Project-Modeling-Noah/Ensemble/cbtarray.csv",xs_cbt)
+np.savetxt(os.path.join(home_dir,"Ensemble/cbtarray.csv"),xs_cbt)
 
 # Calculate Standard Deviation of Residuals and MSE
 residual_std = np.std(residuals, axis=0)
 mse = np.mean(residuals**2, axis=0)
+
+
+start_time = datetime(2023, 7, 8, 0, 0)  # Example start time: 05:00
+end_time = datetime(2023, 7, 9, 0, 0)
+indices = [i for i, t in enumerate(time_series_resp) if start_time <= t <= end_time]
+time_series_df = pd.Series(time_series_resp)
+time_series = time_series_df.iloc[indices]
+time_series = time_series.tolist()
+
+xs_cbt = xs_cbt[indices]
+#time_series = pd.date_range(start="00:01", end="23:59", periods=len(xs_cbt))
+
+plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+plt.xticks(rotation=45)
 
 residual_std_cbt = residual_std[:, 0]  # Extract standard deviation for CBT
 mse_cbt = mse[:, 0]  # Extract MSE for CBT
@@ -214,7 +238,8 @@ mse_cbt = mse[:, 0]  # Extract MSE for CBT
 print("Standard Deviation of Residuals:", residual_std_cbt)
 print("Mean Squared Error (MSE):", mse_cbt)
 
-plt.plot(ys_cbt, xs_cbt, label='Predicted CBT')
+
+plt.plot(time_series, xs_cbt, color = "#003071", label='Predicted CBT')
 plt.title('Predicted Core Body Temperature over Time')
 plt.xlabel('Time Steps')
 plt.ylabel('CBT Estimate')

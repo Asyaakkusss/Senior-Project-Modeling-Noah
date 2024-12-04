@@ -68,18 +68,26 @@ def process_numerical_data(csv_string, column_of_interest):
                                 freq='min')
 
     #align values with the times 
-    interpolated_data = dataframe['value'].reindex(common_time).interpolate()
 
+    interpolated_data = dataframe['value'].reindex(common_time).interpolate()
+    
+    time_series = np.array(interpolated_data.index)
+    
     #create a dataframe with start and value columns 
     aligned_dataframe = pd.DataFrame({
         'value': interpolated_data
         })
+    
+    
 
     processed_data = aligned_dataframe.to_numpy().flatten()
+    print(aligned_dataframe.columns)
     all_nan_data = np.isnan(processed_data)
     non_nan_processed_data = processed_data[~all_nan_data]
+    time_series_present = time_series[~all_nan_data]
+    #present_time_data = processed_time[]
 
-    return non_nan_processed_data
+    return non_nan_processed_data,time_series_present
 
 #column of interest is "onehot_encoded_value", mapped column is "value". feed the generated csv into the
 #process_numerical_data method after running this method. 

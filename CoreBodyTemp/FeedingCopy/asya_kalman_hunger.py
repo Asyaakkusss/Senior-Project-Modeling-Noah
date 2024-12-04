@@ -1,33 +1,33 @@
 # imports
-
+home_dir = '/Users/monugoel/Desktop/CSDS_395/'
+#asya change this to "/home/asyaakkus/Senior-Project-Modeling-Noah/"
 import numpy as np 
 import os
 import csv 
 
 import pandas as pd 
 import matplotlib.pyplot as plt 
+import matplotlib.dates as mdates
 
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
 import sys 
-# sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
-sys.path.append("../../SleepCycle/")
+sys.path.append(os.path.join(home_dir, "SleepCycle"))
 from data_processing import process_categorical_data, process_numerical_data, calc_R, calc_X
-
+from datetime import datetime
 
 #preprocess the data 
-# physical_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/PhysicalEffort.csv"
-# basal_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
-physical_csv_string = "../../data/PhysicalEffort.csv"
-basal_rate_csv_string = "../../data/BasalEnergyBurned.csv"
+physical_csv_string = os.path.join(home_dir, "data/PhysicalEffort.csv")
+basal_rate_csv_string = os.path.join(home_dir, "data/BasalEnergyBurned.csv")
 col_interest = 'start'
-processed_phys_rate = process_numerical_data(physical_csv_string, col_interest)
-processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interest)
+processed_phys_rate, time_phys_rate  = process_numerical_data(physical_csv_string, col_interest)
+processed_basal_rate, time_basal_rate  = process_numerical_data(basal_rate_csv_string, col_interest)
 
 #the three arrays have null values, so we crop the nulls out to leave as much valid data as possible  
 processed_phys_rate = processed_phys_rate[612:]
 processed_basal_rate = processed_basal_rate[612:]
+time_phys_rate = time_phys_rate[612:]
 print (processed_phys_rate)
 
 #thr three arrays are now different lengths, so we find the minimum length and cut off the maximum index of an array at that minimum length 
@@ -36,7 +36,8 @@ min_length = min(len(processed_phys_rate), len(processed_basal_rate))
 #create the index values for the p matrix by finding covariance between the three arrays 
 processed_basal_rate = processed_basal_rate[:min_length]
 processed_phys_rate = processed_phys_rate[:min_length]
-
+time_phys_rate = time_phys_rate[:min_length]
+time_phys_rate = [t.replace(tzinfo=None) for t in time_phys_rate]
 
 time_vals = range(0, len(processed_basal_rate))
 
@@ -158,10 +159,9 @@ print(np.shape(xs))
 xs_reshaped = xs.reshape(302171, 3)
 
 xs_cbt = xs_reshaped[:15000, 0]
+time_phys_rate = time_phys_rate[:15000]
 ys_cbt = np.arange(len(xs_cbt))
-# np.savetxt("/home/asyaakkus/Senior-Project-Modeling-Noah/Ensemble/hungerarray.csv",xs_cbt)
-np.savetxt("../../Ensemble/hungerarray.csv",xs_cbt)
-
+np.savetxt(os.path.join(home_dir, "Ensemble/hungerarray.csv"),xs_cbt)
 
 # Calculate Standard Deviation of Residuals and MSE
 residual_std = np.std(residuals, axis=0)
@@ -173,7 +173,27 @@ mse_cbt = mse[:, 0]  # Extract MSE for CBT
 print("Standard Deviation of Residuals:", residual_std_cbt)
 print("Mean Squared Error (MSE):", mse_cbt)
 
-plt.plot(ys_cbt, xs_cbt, label='Predicted Hunger Levels')
+print(f"first time series: {time_phys_rate[0]}")
+print(f"last time series: {time_phys_rate[-1]}")
+
+
+start_time = datetime(2024, 2, 10, 0, 0)  # Example start time: 05:00
+end_time = datetime(2024, 2, 11, 0, 0)
+indices = [i for i, t in enumerate(time_phys_rate) if start_time <= t <= end_time]
+time_series_df = pd.Series(time_phys_rate)
+time_series = time_series_df.iloc[indices]
+time_series = time_series.tolist()
+
+
+xs_cbt = xs_cbt[indices]
+
+
+plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(interval=120))  # Set ticks every 30 minutes
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+plt.xticks(rotation=45)
+
+
+plt.plot(time_series, xs_cbt, label='Predicted Hunger Levels')
 plt.title('Predicted Hunger over Time')
 plt.xlabel('Time Steps')
 plt.ylabel('Hunger Estimate')
