@@ -11,13 +11,15 @@ from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
 import sys 
-sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
-from data_processing import process_categorical_data, process_numerical_data, calc_R, calc_X
+# sys.path.append("/home/asyaakkus/Senior-Project-Modeling-Noah/SleepCycle/")
+from SleepCycle.data_processing import process_categorical_data, process_numerical_data, calc_R, calc_X
 
 
 #preprocess the data 
-physical_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/PhysicalEffort.csv"
-basal_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
+# physical_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/PhysicalEffort.csv"
+# basal_rate_csv_string = "/home/asyaakkus/Senior-Project-Modeling-Noah/data/BasalEnergyBurned.csv"
+physical_csv_string = "../../data/PhysicalEffort.csv"
+basal_rate_csv_string = "../../data/BasalEnergyBurned.csv"
 col_interest = 'start'
 processed_phys_rate = process_numerical_data(physical_csv_string, col_interest)
 processed_basal_rate = process_numerical_data(basal_rate_csv_string, col_interest)
