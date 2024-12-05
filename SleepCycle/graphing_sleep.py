@@ -1,11 +1,11 @@
 # Imports
+import os
 import numpy as np 
 import csv 
 import matplotlib.pyplot as plt 
 col_to_extract = "value"
 import pandas as pd 
 import data_processing as dp
-
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -62,14 +62,17 @@ BE = convert_to_integer(basal_energy)
 #amount_of_time = 613880
 #aligned_sleep_analysis = sleep_analysis_sans_nan_1D[:amount_of_time]
 
+subset_data = df.iloc[0:1400]
+
 # Plot the DataFrame directly
-plt.figure(figsize=(10, 5))
-df['value'].plot(label='Sleep Analysis', alpha=0.7, linestyle='--')
+subset_data['value'].plot(label='Sleep Analysis', alpha=0.7,linestyle='-')
 plt.title('Plot of Sleep Analysis')
 plt.ylabel('Values')
 plt.xlabel('Time')
 plt.legend()
 plt.show()
+plt.savefig("Sleep")
+
 
 #Noah's combined plot
 '''

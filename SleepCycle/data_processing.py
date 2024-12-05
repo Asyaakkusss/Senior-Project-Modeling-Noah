@@ -150,12 +150,12 @@ def regularize_analysis():
 
     # Category mapping for the values in the csv
     category_mapping = {
-        "HKCategoryValueSleepAnalysisInBed": 2,
-        "HKCategoryValueSleepAnalysisAsleepREM": 3,
-        "HKCategoryValueSleepAnalysisAsleepDeep": 4,
-        "HKCategoryValueSleepAnalysisAsleepCore": 5,
-        "HKCategoryValueSleepAnalysisAwake": 1,
-        "HKCategoryValueSleepAnalysisAsleepUnspecified": 0,
+        "HKCategoryValueSleepAnalysisInBed": 57.78,
+        "HKCategoryValueSleepAnalysisAsleepREM": 57.80,
+        "HKCategoryValueSleepAnalysisAsleepDeep": 57.82,
+        "HKCategoryValueSleepAnalysisAsleepCore":57.84,
+        "HKCategoryValueSleepAnalysisAwake": 57.86,
+        "HKCategoryValueSleepAnalysisAsleepUnspecified": 57.78,
     }
 
     
@@ -203,7 +203,7 @@ def adapt_change(time_df: pd.DataFrame, data_name: str) -> pd.DataFrame:
     print("Range of common_time:", common_time.min(), "to", common_time.max())
 
     #This is to calculate processed_sleep_analysis
-    '''
+    
     # Create the new DataFrame
     new_df = pd.DataFrame(index=common_time, columns=['value'])
     filtered_time_df = time_df.loc[start_time:end_time]
@@ -230,7 +230,7 @@ def adapt_change(time_df: pd.DataFrame, data_name: str) -> pd.DataFrame:
                 old_time_index += 1  # Move to the next old time
             elif difference >= timedelta(hours=4):
                 # Large gap indicates awake state
-                new_df.loc[new_time] = 10
+                new_df.loc[new_time] = 57.88
             else:
                 # Smaller gap, propagate the last known value
                 new_df.loc[new_time] = old_value
@@ -239,7 +239,7 @@ def adapt_change(time_df: pd.DataFrame, data_name: str) -> pd.DataFrame:
             new_df.loc[new_time] = float('nan')
 
 
-    new_df.to_csv("processed_sleep_analysis.csv")'''
+    new_df.to_csv("processed_sleep_analysis.csv")
     
     # Read the CSV into a DataFrame
     data = pd.read_csv("processed_sleep_analysis.csv")
@@ -282,4 +282,4 @@ def convert_1D():
 
     return sleep_analysis_sans_nan_1D
 
-#regularize_analysis()
+regularize_analysis()
