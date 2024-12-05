@@ -1,7 +1,7 @@
 # imports
 #home_dir = '/Users/monugoel/Desktop/CSDS_395/'
 #asya change this to "/home/asyaakkus/Senior-Project-Modeling-Noah/"
-home_dir = "../../"
+home_dir = "/Users/monugoel/Desktop/CSDS_395/"
 import numpy as np 
 import os
 import csv 

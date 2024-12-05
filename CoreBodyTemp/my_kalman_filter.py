@@ -9,13 +9,14 @@ import pandas as pd
 from filterpy.kalman import predict
 from filterpy.common import Q_discrete_white_noise
 from filterpy.kalman import KalmanFilter
+home_dir = "/Users/monugoel/Desktop/CSDS_395/"
 sys.path.append("/Users/monugoel/Desktop/CSDS_395/SleepCycle")
 from data_processing import process_categorical_data, process_numerical_data, calc_R
 from datetime import datetime
 
 
 #extract heart rate data 
-home_dir = "/Users/monugoel/Desktop/CSDS_395/"
+
 #Asya change this to: /home/asyaakkus/Senior-Project-Modeling-Noah/
 
 '''
