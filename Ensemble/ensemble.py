@@ -180,7 +180,10 @@ print("Mean Squared Error (MSE):", mse_cbt)
 print(f"time_series[0]: {time_series[0]}")
 print(f"time_series[-1]: {time_series[-1]}")
 
-for i in range(7,18):
+file_path = 'minutes_processed_sleep_analysis.csv'
+df = pd.read_csv(file_path)
+
+for i in range(8,18):
     start_time = datetime(2023, 7, i, 0, 0)  # Example start time: 05:00
     end_time = datetime(2023, 7, i+1, 0, 0)
 
@@ -195,6 +198,16 @@ for i in range(7,18):
 
     xs_cbt_filtered = xs_cbt[indices]
 
+    #print(xs_cbt_filtered)
+    print(np.shape(xs_cbt_filtered))
+    print(type(xs_cbt_filtered))
+
+    #print(time_series_filtered)
+    print(np.shape(time_series_filtered))
+    print(type(time_series_filtered))
+    print()
+    print()
+
     locator = mdates.HourLocator(interval=2)  # ticks every 2 hours
     plt.gca().xaxis.set_major_locator(locator)
     formatter = mdates.DateFormatter('%H:%M')
@@ -202,13 +215,17 @@ for i in range(7,18):
     plt.gca().set_xlim(start_time, end_time)
 
     plt.xticks(rotation=45)
+    subset_data = df.iloc[0:1440]
 
-
-    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted SCN Activity', color = "#003071")
+    print(subset_data)
+    plt.plot(time_series_filtered, subset_data['value'], label='Sleep Analysis', alpha=0.7, linestyle='-', color='red')
+    
+    plt.plot(time_series_filtered, xs_cbt_filtered, label='Predicted SCN Activity', color = "blue")
     plt.title('Predicted SCN Activity over 24 Hours')
     plt.xlabel('Time (Hours)')
     plt.ylabel('SCN Activity Estimate')
     plt.tight_layout()
+    plt.legend(loc='upper left')
     plt.savefig(os.path.join(script_dir,'ensemble_plot_pngs', f"ensemble_output_{start_time}_to_{end_time}_.png"))
     plt.clf()
     plt.cla()
@@ -224,4 +241,3 @@ plt.legend()
 plt.tight_layout()
 plt.savefig('ensemble_output.png')
 plt.show()
-

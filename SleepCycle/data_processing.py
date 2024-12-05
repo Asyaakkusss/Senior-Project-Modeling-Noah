@@ -282,4 +282,3 @@ def convert_1D():
 
     return sleep_analysis_sans_nan_1D
 
-regularize_analysis()
