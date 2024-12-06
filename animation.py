@@ -48,7 +48,7 @@ line, = ax.plot([], [], lw=2)
 ax.set_xlim(x_data[0], x_data[-1])  # Full x-axis range
 ax.set_ylim(y_min, y_max)
 ax.tick_params(axis='x', rotation=45)
-ax.title("Subject's Hunger Level over 24 Hours")
+ax.set_title("Subject's Hunger Level over 24 Hours")
 
 def init():
     line.set_data([], [])
