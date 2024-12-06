@@ -48,6 +48,7 @@ line, = ax.plot([], [], lw=2)
 ax.set_xlim(x_data[0], x_data[-1])  # Full x-axis range
 ax.set_ylim(y_min, y_max)
 ax.tick_params(axis='x', rotation=45)
+ax.title("Subject's Hunger Level over 24 Hours")
 
 def init():
     line.set_data([], [])
@@ -61,9 +62,21 @@ def update(frame):
     end = start + 5
     current_x.extend(x_data[start:end])
     current_y.extend(y_data[start:end])
+    print(len(current_x))
+    print(len(current_y))
+    print(current_x[-1])
 
     # Update the line data
     line.set_data(current_x, current_y)
+
+    if frame == num_frames - 1:
+        current_x.clear()
+        current_y.clear()
+        #ax.clear()
+        #ax.set_xlim(x_data[0], x_data[-1])  # Reset x-axis
+        #ax.set_ylim(y_min, y_max)          # Reset y-axis
+       #ax.tick_params(axis='x', rotation=45)
+
     return line,
 
 num_frames = len(x_data) // 5  # Number of updates
